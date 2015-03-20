@@ -40,7 +40,7 @@ def passArraytoGdal(nameOfOuputFile, fileHandle, parameterNames, index, numberOf
         for k in range(96):
             value = float(fileHandle.next().strip())
             parameterNames[index][j,k] = value
-    gdalDriver.writeRaster(nameOfOuputFile, parameterNames[index], numberOfRows, numberOfColumns, xavg, yavg, xMin, yMax, epsgValue, driver = outputFormat)
+    gdalDriver.writeRaster(nameOfOuputFile, [parameterNames[index]], numberOfRows, numberOfColumns, xavg, yavg, xMin, yMax, epsgValue, driver = outputFormat)
 
 def parameterValuesToAnArray():
     
