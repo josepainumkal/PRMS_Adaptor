@@ -36,12 +36,9 @@ How to use them
 Module Documentation
 --------------------
 
-The input paramet file contains a set of parameters with a number of values for each nhru (Hydrologic Response Unit). 
-Some parameters are space related. There are 4704 grid cells that each cell represent one location of the watershed, 
-and there is one value for each of the cell. These parameters do not have time features. Some parameters are time 
-related. There are 12 months in a year, so there is a value for each of a month. There parameters do not have space feature.
-Other parameters are both space and time related. For each month, there is a value for each of the cell. These parameters 
-have both space and time features. For now, only space related parameters with 4707 values, and space eand time related 
+The input paramet file contains a set of parameters with a number of values for each nhru (Hydrologic Response Unit). Some parameters are space related. There are 4704 grid cells that each cell represent one location of the watershed, 
+and there is one value for each of the cell. These parameters do not have time features. Some parameters are time related. There are 12 months in a year, so there is a value for each of a month. There parameters do not have space feature.
+Other parameters are both space and time related. For each month, there is a value for each of the cell. These parameters have both space and time features. For now, only space related parameters with 4707 values, and space eand time related 
 parameters with 56448 values are considered. The values are stored as a list and passed to the gdalDriver.
 
 To convert a ``PRMS`` object to a ``NetCDF`` Dataset, just call
