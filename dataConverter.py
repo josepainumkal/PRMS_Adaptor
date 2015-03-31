@@ -1,6 +1,7 @@
 import numpy
 import gdal
 import gdalDriver
+import sys
 
 def copyParameterSectionFromInputFile(fileHandle):
     
@@ -40,7 +41,7 @@ def passArraytoGdal(nameOfOuputFile, fileHandle, parameterNames, index, numberOf
         for k in range(96):
             value = float(fileHandle.next().strip())
             parameterNames[index][j,k] = value
-    gdalDriver.writeRaster(nameOfOuputFile, [parameterNames[index]], numberOfRows, numberOfColumns, xavg, yavg, xMin, yMax, epsgValue, driver = outputFormat)
+    gdalDriver.writeRaster(nameOfOuputFile, parameterNames[index], numberOfRows, numberOfColumns, xavg, yavg, xMin, yMax, epsgValue, driver = outputFormat)
 
 def parameterValuesToAnArray():
     
@@ -85,17 +86,7 @@ def parameterValuesToAnArray():
            
 if __name__ == "__main__":
     
-    nameOfFile = raw_input("Enter the name of input file: ")
+    nameOfFile = sys.argv[1]
     fileHandle = open(nameOfFile, 'r')
     copyParameterSectionFromInputFile(fileHandle)
     parameterValuesToAnArray()
-
-
-
-
-
-
-
-
-
-
