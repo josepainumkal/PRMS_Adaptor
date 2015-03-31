@@ -90,3 +90,5 @@ if __name__ == "__main__":
     fileHandle = open(nameOfFile, 'r')
     copyParameterSectionFromInputFile(fileHandle)
     parameterValuesToAnArray()
+
+
