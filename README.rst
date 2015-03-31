@@ -36,9 +36,31 @@ How to use them
 Module Documentation
 --------------------
 
-The input paramet file contains a set of parameters with a number of values for each hru (Hydrologic Response Unit). Some parameters are space related. There are 4704 grid cells that each cell represents one location of the watershed, 
-and there is one value for each of the cell. These parameters do not have time features. Some parameters are time related. There are 12 months in a year, so there is a value for each of a month. These parameters do not have space features.
-Other parameters are both space and time related. For each month, there is a value for each of the cell. These parameters have both space and time features. At this point, we only include the space and time/space dependent weather variables in the final NetCDF file. Time dependent variables are not considered. The values are stored as a list and passed to the gdalDriver.
+The input paramet file contains a set of parameters with a number of values 
+for each hru (Hydrologic Response Unit). Some parameters are space related. 
+There are 4704 grid cells that each cell represents one location of the watershed,  
+and there is one value for each of the cell. These parameters do not have 
+time features. Some parameters are time related. There are 12 months in a  
+year, so there is a value for each of a month. These parameters do not have 
+space features. Other parameters are both space and time related. For each 
+month, there is a value for each of the cell. These parameters have both space 
+and time features. At this point, we only include the space and time/space 
+dependent weather variables in the final NetCDF file. Time dependent variables 
+are not considered. The values are stored as a list and passed to the gdalDriver.
 
-To convert a ``PRMS`` object to a ``NetCDF`` Dataset, just call
-``writeRaster``, which can be found in the ``gdalDriver.py`` module.
+To convert a ``PRMS`` object to a ``NetCDF`` Dataset, just call 
+``writeRaster``, which can be found in the ``gdalDriver.py`` module. 
+
+The name of the input file used in the example folder is LC.param. Run the 
+file dataConverter.py using the command python dataConverter.py LC.param. 
+copyParameterSectionFromInputFile function copies the parameter section from 
+the input file to a new file named values.param. parameterValuesToAnArray 
+function stores the values of each parameter into separate array and pass these 
+arrays to the writeRaster function. The parameters of the writeRaster function 
+are name of the output file, an array of paramter values, number of rows, 
+number of columns, xavg, yavg, xMin, yMax, EPSG value, and the output format
+(NetCDF). yMax and xMin are the latitude and the longitude values from the 
+XY.DAT file. xavg is the average of difference of maximum and minimum x values, 
+and yavg is the average of difference of maximum and minimum y values in the XY.DAT
+file.
+
