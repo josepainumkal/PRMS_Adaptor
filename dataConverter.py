@@ -1,6 +1,7 @@
 import numpy
 import gdal
 import gdalDriver
+import sys
 
 def copyParameterSectionFromInputFile(fileHandle):
     
@@ -17,7 +18,7 @@ def copyParameterSectionFromInputFile(fileHandle):
             temporaryFileHandle.write(line)
             foundParameterSection = True
 
-def passArraytoGdal(nameOfOuputFile, fileHandle, parameterNames, index, numberOfColumns, numberOfRows):
+def passArraytoGdal(nameOfOutputFile, fileHandle, parameterNames, index, numberOfColumns, numberOfRows):
 
     """
     Function: passArraytoGdal
@@ -40,7 +41,7 @@ def passArraytoGdal(nameOfOuputFile, fileHandle, parameterNames, index, numberOf
         for k in range(96):
             value = float(fileHandle.next().strip())
             parameterNames[index][j,k] = value
-    gdalDriver.writeRaster(nameOfOuputFile, [parameterNames[index]], numberOfRows, numberOfColumns, xavg, yavg, xMin, yMax, epsgValue, driver = outputFormat)
+    gdalDriver.writeRaster(nameOfOutputFile, parameterNames[index], numberOfRows, numberOfColumns, xavg, yavg, xMin, yMax, epsgValue, driver = outputFormat)
 
 def parameterValuesToAnArray():
     
@@ -71,31 +72,23 @@ def parameterValuesToAnArray():
                 parameterNames.append(nameOfParameter)
                 parameterNames[index] = numpy.arange(4704).reshape(numberOfColumns, numberOfRows)     
                 nameOfOuputFile = nameOfParameter+".nc"
-                passArraytoGdal(nameOfOuputFile, fileHandle, parameterNames, index, numberOfColumns, numberOfRows)
+                passArraytoGdal(nameOfOutputFile, fileHandle, parameterNames, index, numberOfColumns, numberOfRows)
                 
             elif numberOfValues == 56448:
                 for i in range(12):
                     parameterNames.append(nameOfParameter)
                     parameterNames[index] = numpy.arange(4704).reshape(numberOfColumns, numberOfRows)
                     nameOfOuputFile = nameOfParameter+"_"+monthNames[monthIndex]+".nc"
-                    passArraytoGdal(nameOfOuputFile, fileHandle, parameterNames, index, numberOfColumns, numberOfRows)
+                    passArraytoGdal(nameOfOutputFile, fileHandle, parameterNames, index, numberOfColumns, numberOfRows)
                     monthIndex = monthIndex + 1
                 monthIndex = 0
             index = index + 1        
            
 if __name__ == "__main__":
     
-    nameOfFile = raw_input("Enter the name of input file: ")
+    nameOfFile = sys.argv[1]
     fileHandle = open(nameOfFile, 'r')
     copyParameterSectionFromInputFile(fileHandle)
     parameterValuesToAnArray()
-
-
-
-
-
-
-
-
 
 
