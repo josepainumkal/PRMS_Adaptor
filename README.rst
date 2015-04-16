@@ -48,7 +48,7 @@ and time features. At this point, we only include the space and time/space
 dependent weather variables in the final NetCDF file. Time dependent variables 
 are not considered. The values are stored as a list and passed to the gdalDriver.
 
-To convert a ``PRMS`` object to a ``NetCDF`` Dataset, just call 
+To convert a ``PRMS`` data to a ``NetCDF`` Dataset, just call 
 ``writeRaster``, which can be found in the ``gdalDriver.py`` module. 
 
 The name of the input file used in the example folder is LC.param. Run the 
