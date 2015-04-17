@@ -51,16 +51,18 @@ are not considered. The values are stored as a list and passed to the gdalDriver
 To convert a ``PRMS`` data to a ``NetCDF`` Dataset, just call 
 ``writeRaster``, which can be found in the ``gdalDriver.py`` module. 
 
-The name of the input file used in the example folder is LC.param. Run the 
-file dataConverter.py using the command python dataConverter.py LC.param. 
-copyParameterSectionFromInputFile function copies the parameter section from 
-the input file to a new file named values.param. parameterValuesToAnArray 
-function stores the values of each parameter into separate array and pass these 
-arrays to the writeRaster function. The parameters of the writeRaster function 
-are name of the output file, an array of paramter values, number of rows, 
-number of columns, xavg, yavg, xMin, yMax, EPSG value, and the output format
-(NetCDF). yMax and xMin are the latitude and the longitude values from the 
-XY.DAT file. xavg is the average of difference of maximum and minimum x values, 
-and yavg is the average of difference of maximum and minimum y values in the XY.DAT
-file.
+The input file 'LC.param' consists of multitude of parameters including their 
+dimensions, which are used by models during PRMS execution. Run the file 
+parame2NetCDF.py using the command 
 
+```
+
+..code-block::python parame2NetCDF.py -r 96 -c 49 -data LC.param -epsg 4326 -hru_cells XY.DAT
+
+-r : number of rows of the dataset 
+-c : number of columns of the dataset
+-data : input file
+-epsg : EPSG code of the dataset used for the projection 
+-hru_cells : resolution values of the dataset
+
+```
