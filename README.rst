@@ -1,5 +1,5 @@
 PRMS Adaptor
-============
+=============
 
 In order for PRMS data to be interoperable with the rest of the Virtual
 Watershed (VW) ecosystem, we need to be able to convert to NetCDF format,
@@ -7,7 +7,7 @@ the reference data format of the VW. To do this we've developed the PRMS
 adaptors as an element of the growing suite of VW adaptors. 
 
 How to use them
----------------
+----------------
 
 .. code-block:: python 
     
