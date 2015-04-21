@@ -55,14 +55,16 @@ The input file 'LC.param' consists of multitude of parameters including their
 dimensions, which are used by models during PRMS execution. Run the file 
 parame2NetCDF.py using the command 
 
-```
 
-..code-block::python parame2NetCDF.py -r 96 -c 49 -data LC.param -epsg 4326 -hru_cells XY.DAT
 
--r : number of rows of the dataset 
--c : number of columns of the dataset
--data : input file
--epsg : EPSG code of the dataset used for the projection 
--hru_cells : resolution values of the dataset
+.. code-block:: bash 
+    
+    parame2NetCDF.py -r 96 -c 49 -data LC.param -epsg 4326 -hru_cells XY.DAT
 
-```
+    -r : number of rows of the dataset 
+    -c : number of columns of the dataset
+    -data : input file
+    -epsg : EPSG code of the dataset used for the projection 
+    -hru_cells : resolution values of the dataset
+
+
