@@ -1,4 +1,4 @@
-import numpy, gdal, osr, sys, os, shutil, glob
+import numpy, gdal, osr, sys, os, shutil, glob, netCDF4
 
 def findAverageResolution(XYDAT):
 
@@ -226,14 +226,31 @@ def writeRaster(nameOfOutputFile, data, numberOfRows, numberOfColumns, xavg, yav
             print sr
         except:
             print "IGNORING EPSG VALUE"
+            
+def generateMetaData():
+    
+    """ 
+        generateMetaData function generates metadata to the output NetCDF files.
+    """
+    source = os.listdir(os.getcwd())
+    for files in source:
+        if files.endswith(".nc"):
+            
+            # initialize new dataset
+            ncfile = netCDF4.Dataset(files, mode='r+', format='NETCDF4_CLASSIC')
+            
+            # add attributes, all global; see CF standards
+	    ncfile.title = files
+            ncfile.source = 'PRMS Parameter File for Lehman Creek'
+	    
+            # to save the file to disk, close the `ncfile` object
+	    ncfile.close()
 
 def moveFilesToANewDirectory():
 
     """
-
         moveFilesToANewDirectory function moves the NetCDF files in the current working directory to a new
         directory.
-
     """
     directoryName = "NetCDF Files"
 
@@ -272,11 +289,5 @@ if __name__ == "__main__":
     fileHandle = open(PRMSDataDirectory, 'r')
     copyParameterSectionFromInputFile(fileHandle)
     readFile(numberOfRows, numberOfColumns, epsgValue, values[0], values[1], values[2], values[3])
+    generateMetaData()
     moveFilesToANewDirectory()
-
-
-
-
-
-
-
