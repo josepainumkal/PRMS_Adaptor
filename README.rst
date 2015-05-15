@@ -59,7 +59,7 @@ parame2NetCDF.py using the command
 
 .. code-block:: bash 
     
-    parame2NetCDF.py -r 96 -c 49 -data LC.param -epsg 4326 -hru_cells XY.DAT
+    python param2NetCDF.py -r 96 -c 49 -data LC.param -epsg 4326 -hru_cells XY.DAT
 
     -r : number of rows of the dataset 
     -c : number of columns of the dataset
