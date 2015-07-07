@@ -66,5 +66,9 @@ parame2NetCDF.py using the command
     -data : input file
     -epsg : EPSG code of the dataset used for the projection 
     -hru_cells : resolution values of the dataset
+    
+Run the file controlToNetcdf.py using the command 
+
+python controlToNetcdf.py LC.control
 
 
