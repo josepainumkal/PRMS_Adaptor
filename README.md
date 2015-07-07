@@ -7,7 +7,6 @@ adaptors as an element of the growing suite of VW adaptors.
 
 ### How to use them
 
-.. code-block:: python 
     
     """
         In writeRaster function, gdal is used to convert PRMS to NetCDF format. 
