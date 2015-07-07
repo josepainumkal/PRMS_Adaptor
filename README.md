@@ -1,13 +1,11 @@
-PRMS Adaptor
-=============
+# PRMS Adaptor
 
 In order for PRMS data to be interoperable with the rest of the Virtual
 Watershed (VW) ecosystem, we need to be able to convert to NetCDF format,
 the reference data format of the VW. To do this we've developed the PRMS
 adaptors as an element of the growing suite of VW adaptors. 
 
-How to use them
-----------------
+### How to use them
 
 .. code-block:: python 
     
@@ -48,27 +46,35 @@ and time features. At this point, we only include the space and time/space
 dependent weather variables in the final NetCDF file. Time dependent variables 
 are not considered. The values are stored as a list and passed to the gdalDriver.
 
-To convert a ``PRMS`` data to a ``NetCDF`` Dataset, just call 
-``writeRaster``, which can be found in the ``gdalDriver.py`` module. 
+To convert a `PRMS` data to a `NetCDF` Dataset, just call 
+`writeRaster`, which can be found in the `gdalDriver.py` module. 
 
 The input file 'LC.param' consists of multitude of parameters including their 
 dimensions, which are used by models during PRMS execution. Run the file 
 parame2NetCDF.py using the command 
 
 
+```bash
 
-.. code-block:: bash 
-    
-    python param2NetCDF.py -r 96 -c 49 -data LC.param -epsg 4326 -hru_cells XY.DAT
+ python param2NetCDF.py -r 96 -c 49 -data LC.param -epsg 4326 -hru_cells XY.DAT
 
     -r : number of rows of the dataset 
     -c : number of columns of the dataset
     -data : input file
     -epsg : EPSG code of the dataset used for the projection 
     -hru_cells : resolution values of the dataset
+
+```
+Run the file 
+controlToNetcdf.py using the command 
+
+
+```bash
+
+ python controlToNetcdf.py LC.control
+
+```
+
     
-Run the file controlToNetcdf.py using the command 
-
-python controlToNetcdf.py LC.control
-
+   
 
