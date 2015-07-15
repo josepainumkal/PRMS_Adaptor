@@ -211,9 +211,3 @@ if __name__ == "__main__":
     # Close the 'ncfile' object
     ncfile.close()
     
-   
-    
-
-    
-   
-
