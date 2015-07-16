@@ -3,38 +3,60 @@ import sys
 
 def find_number_of_days(fileHandle):
 
-    count = -1
- 
-    foundParameterSection = False
+    """
+
+    Returns the total number of lines of data in the file. The 
+    data section starts from the line after the line with # sign. 
+    Initially, the numberOfDays variable is assigned the value 
+    -1. Once we find the # sign, numberOfDays keeps on incrementing 
+    till the end of the file.  
+    
+    """
+
+    numberOfDays = -1
+    found = False
     lines = fileHandle.readlines()
+
     for line in lines:
-        if foundParameterSection or "#" in line:
-            count += 1
-            foundParameterSection = True
-    return count
+        if found or "#" in line:
+            numberOfDays += 1
+            found = True
+
+    return numberOfDays
     
 def find_first_date(fileHandle):
+
+    """
+
+    Returns the date specified in the first row of the data section 
+    in the file. This data is used to mention in the units attribute
+    of the time variable. The first 6 columns in the data rows represent 
+    the date in the order of year, month, day, hour, minute, and second 
+    respectively. The function hence extracts and returns the values in 
+    the first 6 columns of the first row.
+    
+    """
    
     for line in fileHandle:
-        # Finding the number of variables
         if "#" in line:
             firstLine = fileHandle.next().strip().split()[:6]
+
     return firstLine
 
-def insert_variables_to_list(variableNames, variableLengths, line):
-
-    # Appending variable name and length into lists
-    words = line.split()
-    variableNames.append(words[0])
-    variableLengths.append(int(words[1]))
-
 def find_variables(fileHandle):
+
+    """
+
+    Returns the names and lengths of the variables in the file. Two lists, 
+    variableNames and variableLengths are created to append the names and 
+    lengths respectively. 
+    
+    """
     
     variableNames = []
     variableLengths = []  
     
     for line in fileHandle:
-        # Finding the variables and their length
         if "///" in line:
             firstLine = fileHandle.next().strip()
             if not "//" in firstLine:
@@ -46,45 +68,83 @@ def find_variables(fileHandle):
 
     return variableNames, variableLengths
 
+def insert_variables_to_list(variableNames, variableLengths, line):
+
+    """
+     
+    Appends the variable name and length into lists.
+    
+    """
+
+    variables = line.split()
+    variableNames.append(variables[0])
+    variableLengths.append(int(variables[1]))
+
 def find_units(fileHandle):
+
+    """
+
+    Returns the names and units of the variables in the file. Two 
+    lists, variableNames and variableUnits are created to append 
+    the names and units respectively. variableNames are stored 
+    because the term 'temperature' is used for the variables tmax 
+    and tmin. 
+    
+    """
 
     variableNames = []
     variableUnits = [] 
 
     for line in fileHandle:
-
-        # Finding the variables and their length
         if '///' in line:
             firstLine = fileHandle.next().strip()
             nextLine = fileHandle.next().strip()
             if '///' in nextLine:
-	        l = firstLine.rsplit(':')[1].strip()
-	        words = l.rsplit(',')
-                for word in words:
-		    variableNames.append(word.rsplit('=')[0].strip())
-		    variableUnits.append(word.rsplit('=')[1].strip())
+	        variables = firstLine.rsplit(':')[1].strip().rsplit(',')
+	        for variable in variables:
+		    variableNames.append(variable.rsplit('=')[0].strip())
+		    variableUnits.append(variable.rsplit('=')[1].strip())
 
     return variableNames, variableUnits
 
-def find_metadata(fileHandle, s):
+def find_metadata(fileHandle, totalNumberOfVariables):
     
-    dValues = []
+    """
+ 
+    Returns the metadata of the variables in the file. headerValues 
+    include details such as ID, Type, Latitude, Longitude, and 
+    Elevation of the stations from where the variables are measured. 
+    The total number of lines of metadata specified in the file after 
+    the headerline will be equal to the totalNumberOfVariables.
+    
+    """
+
+    dataValues = []
 
     for line in fileHandle:
         if '///' in line:
             fileHandle.next().strip()
-            header = fileHandle.next().rsplit('//')[1].strip()
-	    headerValues = header.split()
+            headerValues = fileHandle.next().rsplit('//')[1].strip().split()
             
-	    for i in range(s):
-                nextLine = fileHandle.next().rsplit('//')[1].strip()    
-		dataValues = nextLine.split()[:len(headerValues)]
-		dValues.append(dataValues)	       
+	    for i in range(totalNumberOfVariables):
+                data = fileHandle.next().rsplit('//')[1].strip().split()[:len(headerValues)]    
+		dataValues.append(data)	       
 	    break
 
-    return headerValues, dValues
+    return headerValues, dataValues
 
-def find_column_values(fileHandle, numberOfDays, i):
+def find_column_values(fileHandle, numberOfDays, position):
+
+    """
+    
+    Returns the values of variables in the file. 
+
+    Args:
+        numberOfDays (int): is the total number of values for the variable
+	position (int): is the column position from where the values can be 
+        retrieved
+    
+    """
 
     values = []
 
@@ -92,34 +152,47 @@ def find_column_values(fileHandle, numberOfDays, i):
         if '#' in line:
 	    for j in range(numberOfDays):
 	        valuesInLine = fileHandle.next().strip().split()[6:]
-                values.append(valuesInLine[i])
+                values.append(valuesInLine[position])
     
     return values
 
-def find_time_values(fileHandle, numberOfDays):
+def find_tmax_tmin_units(index, variableNames, varNames, variableUnits):
 
-    values = []
-
-    for line in fileHandle:
-        if '#' in line:
-	    for j in range(numberOfDays):
-	        valuesInLine = fileHandle.next().strip().split()[:6]
-                values.append(int(valuesInLine[2]))
+    """
     
-    return values
+    Adds the unit attribute for the variables. If tmax or tmin variable
+    is found in the variableNames list, they will be given the unit of 
+    'temperature' variable in the varNames list from the variableUnits list.
 
-def find_tmax_tmin_units(i, variableNames, varNames, variableUnits):
+    Args:
+        index (int): is the index of the list
+	variableNames: list of variable names
+	varNames: list of variable names
+	variableUnits: list of variable units
+    
+    """
 
-    if variableNames[i] == 'tmax':
-        p = varNames.index('temperature')
-	var.units = variableUnits[p]
-    elif variableNames[i] == 'tmin':
-	p = varNames.index('temperature')
-	var.units = variableUnits[p]
+    if variableNames[index] == 'tmax':
+        position = varNames.index('temperature')
+	var.units = variableUnits[position]
+    elif variableNames[index] == 'tmin':
+	position = varNames.index('temperature')
+	var.units = variableUnits[position]
     else:
-	var.units = variableUnits[i]
+	var.units = variableUnits[index]
 
-def add_metadata(var, dataValues, position, headerValues):
+def add_metadata(dataValues, position, headerValues):
+
+    """
+    
+    Adds the metadata of the variables. 
+
+    Args:
+        dataValues: list containing metadata of all the variables
+	position (int): is the position in the list
+	headerValues: list containing header values (ID, Type, Latitude, Longitude, Elevation)
+    
+    """
   
     var.ID = dataValues[position][headerValues.index('ID')]
     var.latitude = dataValues[position][headerValues.index('Latitude')]
@@ -128,14 +201,18 @@ def add_metadata(var, dataValues, position, headerValues):
 	        
 if __name__ == "__main__":
    
+    totalNumberOfVariables = 0
+
+    totalNumberofLinesOfData = []
+    sumOfVariableLengths = []
+    
+    # Finding the total number of days
     fileHandle = open(sys.argv[1], 'r')
     numberOfDays = find_number_of_days(fileHandle)
-    print numberOfDays
+    for day in range(numberOfDays):
+	totalNumberofLinesOfData.append(day)
 
-    no = []
-    for i in range(numberOfDays):
-	no.append(i)
-
+    # Finding the first date
     fileHandle = open(sys.argv[1], 'r')
     firstDate = find_first_date(fileHandle)
     year = firstDate[0]
@@ -145,16 +222,14 @@ if __name__ == "__main__":
     minute = firstDate[4]
     second = firstDate[5]
 
-    # Finding the variables and their length
+    # Finding the variables and their lengths
     fileHandle = open(sys.argv[1], 'r')
     variables = find_variables(fileHandle)
     variableNames = variables[0]
     variableLengths = variables[1]
-    sumValues = []
-    s = 0
-    for i in range(len(variableLengths)):
-	s = s + variableLengths[i]
-	sumValues.append(s)
+    for length in range(len(variableLengths)):
+	totalNumberOfVariables = totalNumberOfVariables + variableLengths[length]
+	sumOfVariableLengths.append(totalNumberOfVariables)
         
     # Finding the variable units
     fileHandle = open(sys.argv[1], 'r')
@@ -164,44 +239,40 @@ if __name__ == "__main__":
 
     # Finding the metadata
     fileHandle = open(sys.argv[1], 'r')
-    metadata = find_metadata(fileHandle, s)
+    metadata = find_metadata(fileHandle, totalNumberOfVariables)
     headerValues = metadata[0]
     dataValues = metadata[1]
-    #print headerValues
-
-
+ 
     # Initialize new dataset
     ncfile = netCDF4.Dataset('data.nc', mode='w')
 
     # Initialize dimensions
     time = ncfile.createDimension('time', numberOfDays)  
-    #time = ncfile.createDimension('time', 5)  
 
-    # Define variables
+    # Define time variable
     time = ncfile.createVariable('time', 'i4', ('time',))
     time.long_name = 'time'  
     time.units = 'days since '+year+'-'+month+'-'+day+' '+hour+':'+minute+':'+second
-  
-    fileHandle = open(sys.argv[1], 'r')
-    timeValues = find_time_values(fileHandle, numberOfDays)
-    time[:] = no
+    time[:] = totalNumberofLinesOfData
 
+    # Define other variables
     for i in range(len(variableNames)):
         if variableLengths[i] > 1:
-	    v = sumValues[i] - variableLengths[i]
+	    position = sumOfVariableLengths[i] - variableLengths[i]
+
 	    for j in range(variableLengths[i]):
-	        
-		var = ncfile.createVariable(variableNames[i]+'_'+str(j+1), 'f4', ('time',))
-		add_metadata(var, dataValues, v+j, headerValues)
+	        var = ncfile.createVariable(variableNames[i]+'_'+str(j+1), 'f4', ('time',))
+		add_metadata(dataValues, position+j, headerValues)
 		find_tmax_tmin_units(i, variableNames, varNames, variableUnits)
 
 		fileHandle = open(sys.argv[1], 'r')
-    	        columnValues = find_column_values(fileHandle, numberOfDays, v+j)		
+    	        columnValues = find_column_values(fileHandle, numberOfDays, position+j)		
 		var[:] = columnValues
+
     	else:
 	    var = ncfile.createVariable(variableNames[i], 'f4', ('time',)) 
-	    position = sumValues[i] - 1
-	    add_metadata(var, dataValues, position, headerValues)
+	    position = sumOfVariableLengths[i] - 1
+	    add_metadata(dataValues, position, headerValues)
 	    find_tmax_tmin_units(i, variableNames, varNames, variableUnits)
 	    
 	    fileHandle = open(sys.argv[1], 'r')
@@ -209,5 +280,11 @@ if __name__ == "__main__":
             var[:] = columnValues
     
     # Close the 'ncfile' object
-    ncfile.close()  
+    ncfile.close()
+    
+   
+    
+
+    
+   
 
