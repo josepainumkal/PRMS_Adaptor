@@ -33,7 +33,7 @@ adaptors as an element of the growing suite of VW adaptors.
 Module Documentation
 --------------------
 
-The input paramet file contains a set of parameters with a number of values 
+The input parameter file contains a set of parameters with a number of values 
 for each hru (Hydrologic Response Unit). Some parameters are space related. 
 There are 4704 grid cells that each cell represents one location of the watershed,  
 and there is one value for each of the cell. These parameters do not have 
