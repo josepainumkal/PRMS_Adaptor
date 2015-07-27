@@ -79,7 +79,7 @@ animationToNetcdf.py using the command
 
 
 ```bash
- python animationToNetcdf.py -data animation.out.nhru -loc XY.DAT -nhru 4704 -nrows 96 -ncols 49
+ python animationToNetcdf.py -data animation.out.nhru -loc XY.DAT -nhru 4704 -nrows 49 -ncols 96
 
 ```
     
