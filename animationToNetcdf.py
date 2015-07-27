@@ -107,7 +107,7 @@ if __name__ == "__main__":
 	timeValues.append(index+1)	
     time[:] = timeValues
 
-    lat = ncfile.createVariable('lat', 'f8', ('ncols', 'nrows'))
+    lat = ncfile.createVariable('lat', 'f8', ('nrows', 'ncols'))
     lat.long_name = 'latitude'  
     lat.units = 'degrees_north'
     position = 1
@@ -115,7 +115,7 @@ if __name__ == "__main__":
     columnValues = find_location_values(fileHandle, numberOfHruCells, position)		
     lat[:] = columnValues
 
-    lon = ncfile.createVariable('lon', 'f8', ('ncols', 'nrows'))
+    lon = ncfile.createVariable('lon', 'f8', ('nrows', 'ncols'))
     lon.long_name = 'longitude'  
     lon.units = 'degrees_east'
     position = 2
@@ -124,7 +124,7 @@ if __name__ == "__main__":
     lon[:] = columnValues
 
     for index in range(len(outputVariableNames)):
-	var = ncfile.createVariable(outputVariableNames[index], 'f8', ('time', 'ncols', 'nrows')) 
+	var = ncfile.createVariable(outputVariableNames[index], 'f8', ('time', 'nrows', 'ncols')) 
         fileHandle = open(animationFile, 'r')
         columnValues = find_column_values(fileHandle, totalNumberOfDataValues, numberOfMetadataLines, index)		
 	var[:] = columnValues
