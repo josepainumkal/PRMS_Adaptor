@@ -49,6 +49,41 @@ def find_column_values(fileHandle, totalNumberOfDataValues, numberOfMetadataLine
     
     return values
 
+def find_average_resolution(fileHandle, numberOfHruCells, numberOfRows, numberOfColumns):
+
+    """
+    
+    Returns the values of variables in the file. 
+
+    Args:
+        numberOfDays (int): is the total number of values for the variable
+	position (int): is the column position from where the values can be 
+        retrieved
+    
+    """
+
+    latitudeValues = []
+    longitudeValues = []
+   
+    for i in range(numberOfHruCells):
+	valuesInLine = fileHandle.next().strip().split()
+        longitudeValues.append(float(valuesInLine[1]))
+	latitudeValues.append(float(valuesInLine[2]))
+
+    minimumLatitudeValue = min(latitudeValues)
+    maximumLatitudeValue = max(latitudeValues)
+
+    minimumLongitudeValue = min(longitudeValues)
+    maximumLongitudeValue = max(longitudeValues)
+
+    averageOfLatitudeValues = (maximumLatitudeValue-minimumLatitudeValue)/numberOfRows
+    averageOfLongitudeValues = (maximumLongitudeValue-minimumLongitudeValue)/numberOfColumns
+ 
+    latitudeOfFirstHru = latitudeValues[0]
+    longitudeOfFirstHru = longitudeValues[0]
+
+    return averageOfLatitudeValues, averageOfLongitudeValues, latitudeOfFirstHru, longitudeOfFirstHru
+
 if __name__ == "__main__":
    
     numberOfMetadataLines = 0
@@ -92,13 +127,20 @@ if __name__ == "__main__":
     fileHandle.next()
     firstDate = fileHandle.next().strip().split()[0]
 
+    fileHandle = open(locationFile, 'r')
+    values = find_average_resolution(fileHandle, numberOfHruCells, numberOfRows, numberOfColumns)
+    averageOfLatitudeValues = values[0]
+    averageOfLongitudeValues = values[1]
+    latitudeOfFirstHru = values[2]
+    longitudeOfFirstHru = values[3]
+
     # Initialize new dataset
     ncfile = netCDF4.Dataset('animation.nc', mode='w')
 
     # Initialize dimensions
     time_dim = ncfile.createDimension('time', numberOfTimestamps)  
-    nrows_dim = ncfile.createDimension('nrows', numberOfRows)
-    ncols_dim = ncfile.createDimension('ncols', numberOfColumns)
+    nrows_dim = ncfile.createDimension('lat', numberOfRows)
+    ncols_dim = ncfile.createDimension('lon', numberOfColumns)
 
     time = ncfile.createVariable('time', 'i4', ('time',))
     time.long_name = 'time'  
@@ -106,30 +148,37 @@ if __name__ == "__main__":
     for index in range(numberOfTimestamps):
 	timeValues.append(index+1)	
     time[:] = timeValues
-
-    lat = ncfile.createVariable('lat', 'f8', ('nrows', 'ncols'))
+   
+    latList = []
+    latList.append(latitudeOfFirstHru)
+    previousValue = latitudeOfFirstHru
+    lat = ncfile.createVariable('lat', 'f8', ('lat',))
     lat.long_name = 'latitude'  
     lat.units = 'degrees_north'
-    position = 1
-    fileHandle = open(locationFile, 'r')
-    columnValues = find_location_values(fileHandle, numberOfHruCells, position)		
-    lat[:] = columnValues
+    for i in range(numberOfRows - 1):
+	newValue = previousValue - averageOfLatitudeValues
+	latList.append(newValue)
+	previousValue = newValue
+    lat[:] = latList
 
-    lon = ncfile.createVariable('lon', 'f8', ('nrows', 'ncols'))
+    lonList = []
+    lonList.append(longitudeOfFirstHru)
+    previousValue = longitudeOfFirstHru
+    lon = ncfile.createVariable('lon', 'f8', ('lon',))
     lon.long_name = 'longitude'  
     lon.units = 'degrees_east'
-    position = 2
-    fileHandle = open(locationFile, 'r')
-    columnValues = find_location_values(fileHandle, numberOfHruCells, position)		
-    lon[:] = columnValues
+    for i in range(numberOfColumns - 1):
+	newValue = previousValue + averageOfLongitudeValues
+	lonList.append(newValue)
+	previousValue = newValue
+    lon[:] = lonList
 
     for index in range(len(outputVariableNames)):
-	var = ncfile.createVariable(outputVariableNames[index], 'f8', ('time', 'nrows', 'ncols')) 
+	var = ncfile.createVariable(outputVariableNames[index], 'f8', ('time', 'lat', 'lon')) 
         fileHandle = open(animationFile, 'r')
         columnValues = find_column_values(fileHandle, totalNumberOfDataValues, numberOfMetadataLines, index)		
 	var[:] = columnValues
-
+    
     # Close the 'ncfile' object
     ncfile.close()
-
 
