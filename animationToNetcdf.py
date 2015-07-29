@@ -178,7 +178,12 @@ if __name__ == "__main__":
         fileHandle = open(animationFile, 'r')
         columnValues = find_column_values(fileHandle, totalNumberOfDataValues, numberOfMetadataLines, index)		
 	var[:] = columnValues
+
+    # Global attributes
+    ncfile.title = 'PRMS Animation File'
+    ncfile.source = 'Lehman Creek Watershed'
     
     # Close the 'ncfile' object
     ncfile.close()
+
 
