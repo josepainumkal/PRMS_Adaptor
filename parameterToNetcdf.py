@@ -190,14 +190,8 @@ if __name__ == "__main__":
     spaceAndTimeRelatedParameterTypes = parameters[3]
 
     if spaceAndTimeRelatedParameterNames:
-	#parameterWithMonthNames = []
 	monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
-        '''
-	for i in range(len(spaceAndTimeRelatedParameterNames)):
-	    for j in range(len(monthNames)):
-	        name = spaceAndTimeRelatedParameterNames[i]+'_'+monthNames[j]
-                parameterWithMonthNames.append(name)
-	'''
+     
     fileHandle = open(locationFile, 'r')
     values = find_average_resolution(fileHandle, numberOfHruCells, numberOfRows, numberOfColumns)
     averageOfLatitudeValues = values[0]
