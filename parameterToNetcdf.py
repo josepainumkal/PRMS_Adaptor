@@ -44,6 +44,8 @@ def copyParameterSectionFromInputFile(fileHandle):
 
 def find_parameters(fileHandle, numberOfHruCells):
     
+    spaceRelatedParameterDimensions = []
+    spaceAndTimeRelatedParameterDimensions = []
     spaceRelatedParameterNames = []
     spaceRelatedParameterTypes = []
     spaceAndTimeRelatedParameterNames = []
@@ -54,21 +56,27 @@ def find_parameters(fileHandle, numberOfHruCells):
             name = fileHandle.next().strip().split()[0]
 	    numberOfDimensions = int(fileHandle.next().strip())
 	    if numberOfDimensions == 1:
-	        fileHandle.next()
-	        numberOfValues = int(fileHandle.next().strip())
+	        dimension = fileHandle.next().strip()
+		numberOfValues = int(fileHandle.next().strip())
                 if numberOfValues == numberOfHruCells:
+		    spaceRelatedParameterDimensions.append(dimension)	
 		    spaceRelatedParameterNames.append(name)	
 		    typeOfValues = int(fileHandle.next().strip())
 		    spaceRelatedParameterTypes.append(typeOfValues)
-	    if numberOfDimensions == 2:
-		spaceAndTimeRelatedParameterNames.append(name)
-		for i in range(3):
-		    fileHandle.next()
-                typeOfValues = int(fileHandle.next().strip())
-		spaceAndTimeRelatedParameterTypes.append(typeOfValues)
 
+	    if numberOfDimensions == 2:
+	        dimension = fileHandle.next().strip()
+                fileHandle.next()
+		numberOfValues = int(fileHandle.next().strip())
+                if numberOfValues == numberOfHruCells * 12:
+		    spaceAndTimeRelatedParameterDimensions.append(dimension)	
+		    spaceAndTimeRelatedParameterNames.append(name)	
+		    typeOfValues = int(fileHandle.next().strip())
+		    spaceAndTimeRelatedParameterTypes.append(typeOfValues)
+	
     return spaceRelatedParameterNames, spaceRelatedParameterTypes, \
-	   spaceAndTimeRelatedParameterNames, spaceAndTimeRelatedParameterTypes
+	   spaceAndTimeRelatedParameterNames, spaceAndTimeRelatedParameterTypes, \
+	   spaceRelatedParameterDimensions, spaceAndTimeRelatedParameterDimensions
 
 def find_space_dependent_parameter_values(fileHandle, spaceRelatedParameterName, numberOfHruCells):
     
@@ -151,12 +159,43 @@ def find_average_resolution(fileHandle, numberOfHruCells, numberOfRows, numberOf
 
     return averageOfLatitudeValues, averageOfLongitudeValues, latitudeOfFirstHru, longitudeOfFirstHru
 
-if __name__ == "__main__":
-       
-    numberOfLinesBeforeParameterSection = 0 
+def add_metadata(parameterName):
 
-    numberOfArgs = len(sys.argv)
+    fileHandle = open('parameterDetails.txt', 'r')
+    for line in fileHandle:
+        if parameterName in line:
+	    parameterNameFromFile = line.strip()		
+	    lengthOfParameterName = len(parameterNameFromFile)
+	    positionOfNameStart = parameterNameFromFile.index(':') + 2
+ 	    parameterName = parameterNameFromFile[positionOfNameStart:lengthOfParameterName]
+		
+	    parameterDescriptionFromFile = fileHandle.next().strip()
+	    lengthOfParameterDescription = len(parameterDescriptionFromFile)
+	    positionOfDescriptionStart = parameterDescriptionFromFile.index(':') + 2
+	    parameterDescription = parameterDescriptionFromFile[positionOfDescriptionStart:lengthOfParameterDescription]
+		
+	    parameterUnitFromFile = fileHandle.next().strip()
+	    lengthOfParameterUnit = len(parameterUnitFromFile)
+	    positionOfUnitStart = parameterUnitFromFile.index(':') + 2
+	    parameterUnit = parameterUnitFromFile[positionOfUnitStart:lengthOfParameterUnit]
+		
+	    break;
 
+    return parameterName, parameterDescription, parameterUnit
+
+def find_variable_type(parameterType):
+
+    if parameterType == 1:
+	value = 'i4'
+    elif parameterType == 2:
+	value = 'f8'
+
+    return value
+
+
+def parameter_to_netcdf(inputs, outputFileName):
+
+    numberOfArgs = len(inputs)
     for i in range(numberOfArgs):
 
         if sys.argv[i] == "-data":
@@ -188,10 +227,12 @@ if __name__ == "__main__":
     spaceRelatedParameterTypes = parameters[1]
     spaceAndTimeRelatedParameterNames = parameters[2]
     spaceAndTimeRelatedParameterTypes = parameters[3]
-
+    spaceRelatedParameterDimensions = parameters[4]
+    spaceAndTimeRelatedParameterDimensions = parameters[5]
+        
     if spaceAndTimeRelatedParameterNames:
 	monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
-     
+       
     fileHandle = open(locationFile, 'r')
     values = find_average_resolution(fileHandle, numberOfHruCells, numberOfRows, numberOfColumns)
     averageOfLatitudeValues = values[0]
@@ -200,7 +241,7 @@ if __name__ == "__main__":
     longitudeOfFirstHru = values[3]
 
     # Initialize new dataset
-    ncfile = netCDF4.Dataset('parameter.nc', mode='w')
+    ncfile = netCDF4.Dataset(outputFileName, mode='w')
 
     # Initialize dimensions
     lat_dim = ncfile.createDimension('lat', numberOfRows)
@@ -232,29 +273,51 @@ if __name__ == "__main__":
 	lonList.append(newValue)
 	previousValue = newValue
     lon[:] = lonList
-
+   
     for index in range(len(spaceRelatedParameterNames)):
-	if spaceRelatedParameterTypes[index] == 1:
-	    value = 'i4'
-	elif spaceRelatedParameterTypes[index] == 2:
-	    value = 'f8'
+        value = find_variable_type(spaceRelatedParameterTypes[index])
+	metadata = add_metadata(spaceRelatedParameterNames[index])
+        parameterName = metadata[0]
+	parameterDescription = metadata[1]
+	parameterUnit = metadata[2]
+
         var = ncfile.createVariable(spaceRelatedParameterNames[index], value, ('lat', 'lon')) 
+	var.title = parameterName
+	var.dimension = spaceRelatedParameterDimensions[index]
+	var.description = parameterDescription
+	var.units = parameterUnit
+
         fileHandle = open('values.param', 'r')
         values = find_space_dependent_parameter_values(fileHandle, spaceRelatedParameterNames[index], numberOfHruCells)		
 	var[:] = values
 
-    for i in range(len(spaceAndTimeRelatedParameterNames)):
-	if spaceAndTimeRelatedParameterTypes[i] == 1:
-	    value = 'i4'
-	elif spaceAndTimeRelatedParameterTypes[i] == 2:
-	    value = 'f8'
-	for j in range(len(monthNames)):
-	    var = ncfile.createVariable(spaceAndTimeRelatedParameterNames[i]+'_'+monthNames[j], value, ('lat', 'lon')) 
-            fileHandle = open('values.param', 'r')
-            values = find_space_and_time_dependent_parameter_values(fileHandle, spaceAndTimeRelatedParameterNames[i], numberOfHruCells, j)		
+    for index in range(len(spaceAndTimeRelatedParameterNames)):
+	value = find_variable_type(spaceAndTimeRelatedParameterTypes[index])
+        metadata = add_metadata(spaceAndTimeRelatedParameterNames[index])
+        parameterName = metadata[0]
+	parameterDescription = metadata[1]
+	parameterUnit = metadata[2]
+
+	for monthIndex in range(len(monthNames)):
+	    var = ncfile.createVariable(spaceAndTimeRelatedParameterNames[index]+'_'+monthNames[monthIndex], value, ('lat', 'lon'))
+	    var.title = parameterName+'_'+monthNames[monthIndex]
+	    var.dimension = spaceAndTimeRelatedParameterDimensions[index]+', '+'nmonths'
+	    var.description = parameterDescription
+            var.units = parameterUnit
+
+	    fileHandle = open('values.param', 'r')
+            values = find_space_and_time_dependent_parameter_values(fileHandle, spaceAndTimeRelatedParameterNames[index], numberOfHruCells, monthIndex)		
 	    var[:] = values
     
+    # Global attributes
+    ncfile.title = open(parameterFile, 'r').readline().strip()
+
     # Close the 'ncfile' object
     ncfile.close()
 
+if __name__ == "__main__":
+       
+    parameter_to_netcdf(sys.argv, 'parameter.nc')
+
+    
 
