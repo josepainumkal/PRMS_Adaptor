@@ -282,10 +282,10 @@ def parameter_to_netcdf(inputs, outputFileName):
 	parameterUnit = metadata[2]
 
         var = ncfile.createVariable(spaceRelatedParameterNames[index], value, ('lat', 'lon')) 
-	var.title = parameterName
+	var.layer_name = parameterName
 	var.dimension = spaceRelatedParameterDimensions[index]
-	var.description = parameterDescription
-	var.units = parameterUnit
+	var.layer_desc = parameterDescription
+	var.layer_units = parameterUnit
 
         fileHandle = open('values.param', 'r')
         values = find_space_dependent_parameter_values(fileHandle, spaceRelatedParameterNames[index], numberOfHruCells)		
@@ -300,10 +300,10 @@ def parameter_to_netcdf(inputs, outputFileName):
 
 	for monthIndex in range(len(monthNames)):
 	    var = ncfile.createVariable(spaceAndTimeRelatedParameterNames[index]+'_'+monthNames[monthIndex], value, ('lat', 'lon'))
-	    var.title = parameterName+'_'+monthNames[monthIndex]
+	    var.layer_name = parameterName+'_'+monthNames[monthIndex]
 	    var.dimension = spaceAndTimeRelatedParameterDimensions[index]+', '+'nmonths'
-	    var.description = parameterDescription
-            var.units = parameterUnit
+	    var.layer_desc = parameterDescription
+            var.layer_units = parameterUnit
 
 	    fileHandle = open('values.param', 'r')
             values = find_space_and_time_dependent_parameter_values(fileHandle, spaceAndTimeRelatedParameterNames[index], numberOfHruCells, monthIndex)		
