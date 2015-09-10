@@ -311,6 +311,9 @@ def parameter_to_netcdf(inputs, outputFileName):
     
     # Global attributes
     ncfile.title = open(parameterFile, 'r').readline().strip()
+    ncfile.bands = 1
+    ncfile.bands_name = 'bands'
+    ncfile.bands_desc = 'Parameter information for ' + parameterFile
 
     # Close the 'ncfile' object
     ncfile.close()
