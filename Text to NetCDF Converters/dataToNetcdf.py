@@ -320,10 +320,12 @@ def data_to_netcdf(fileInput, outputFileName):
     	    columnValues = find_column_values(fileHandle, numberOfDays, position)
             var[:] = columnValues
 
+
     # Global attributes
-    ncfile.title = 'Data File'
-    ncfile.nsteps = 1
-    ncfile.description = 'Variable information for ' + fileInput
+    ncfile.title = 'Date File'
+    ncfile.bands = 1
+    ncfile.bands_name = 'nsteps'
+    ncfile.bands_desc = 'Variable information for ' + fileInput
      
     # Close the 'ncfile' object
     ncfile.close()
