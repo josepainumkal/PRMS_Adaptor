@@ -193,26 +193,8 @@ def find_variable_type(parameterType):
     return value
 
 
-def parameter_to_netcdf(inputs, outputFileName):
-
-    numberOfArgs = len(inputs)
-    for i in range(numberOfArgs):
-
-        if sys.argv[i] == "-data":
-	    parameterFile = sys.argv[i+1]
-
-	elif sys.argv[i] == "-loc":
-	    locationFile = sys.argv[i+1]
-
-        elif sys.argv[i] ==  "-nhru":
-	    numberOfHruCells = int(sys.argv[i+1])
-
-        elif sys.argv[i] ==  "-nrows":
-	    numberOfRows = int(sys.argv[i+1])
-
-	elif sys.argv[i] ==  "-ncols":
-	    numberOfColumns = int(sys.argv[i+1])
-
+def parameter_to_netcdf(parameterFile, locationFile, numberOfHruCells, numberOfRows, numberOfColumns, outputFileName):
+   
     fileHandle = open(parameterFile, 'r')
     dimensions = find_dimensions(fileHandle)
     dimensionNames = dimensions[0]
@@ -319,8 +301,26 @@ def parameter_to_netcdf(inputs, outputFileName):
     ncfile.close()
 
 if __name__ == "__main__":
+ 
+    numberOfArgs = len(sys.argv)
+    for i in range(numberOfArgs):
+
+        if sys.argv[i] == "-data":
+	    parameterFile = sys.argv[i+1]
+
+	elif sys.argv[i] == "-loc":
+	    locationFile = sys.argv[i+1]
+
+        elif sys.argv[i] ==  "-nhru":
+	    numberOfHruCells = int(sys.argv[i+1])
+
+        elif sys.argv[i] ==  "-nrows":
+	    numberOfRows = int(sys.argv[i+1])
+
+	elif sys.argv[i] ==  "-ncols":
+	    numberOfColumns = int(sys.argv[i+1])
        
-    parameter_to_netcdf(sys.argv, 'parameter.nc')
+    parameter_to_netcdf(parameterFile, locationFile, numberOfHruCells, numberOfRows, numberOfColumns, 'parameter.nc')
 
     
 
