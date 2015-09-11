@@ -156,7 +156,7 @@ def find_column_values(fileHandle, numberOfDays, position):
     
     return values
 
-def find_tmax_tmin_units(index, variableNames, varNames, variableUnits):
+def find_tmax_tmin_units(index, var, variableNames, varNames, variableUnits):
 
     """
     
@@ -174,15 +174,41 @@ def find_tmax_tmin_units(index, variableNames, varNames, variableUnits):
 
     if variableNames[index] == 'tmax':
         position = varNames.index('temperature')
-	var.units = variableUnits[position]
+	var.layer_units = variableUnits[position]
     elif variableNames[index] == 'tmin':
 	position = varNames.index('temperature')
-	var.units = variableUnits[position]
-    else:
-	var.units = variableUnits[index]
+	var.layer_units = variableUnits[position]
+    elif variableNames[index] == 'precip' or variableNames[index] == 'runoff':
+	var.layer_units = variableUnits[index]
 
-def add_metadata(dataValues, position, headerValues):
 
+def get_metadata(variableName):
+
+    fileHandle = open('dataVariableDetails.txt', 'r')
+    for line in fileHandle:
+        if variableName in line:
+	    variableNameFromFile = line.strip()		
+	    lengthOfVariableName = len(variableNameFromFile)
+	    positionOfNameStart = variableNameFromFile.index(':') + 2
+ 	    variableName = variableNameFromFile[positionOfNameStart:lengthOfVariableName]
+		
+	    variableDescriptionFromFile = fileHandle.next().strip()
+	    lengthOfVariableDescription = len(variableDescriptionFromFile)
+	    positionOfDescriptionStart = variableDescriptionFromFile.index(':') + 2
+	    variableDescription = variableDescriptionFromFile[positionOfDescriptionStart:lengthOfVariableDescription]
+		
+	    variableUnitFromFile = fileHandle.next().strip()
+	    lengthOfVariableUnit = len(variableUnitFromFile)
+	    positionOfUnitStart = variableUnitFromFile.index(':') + 2
+	    variableUnit = variableUnitFromFile[positionOfUnitStart:lengthOfVariableUnit]
+		
+	    break;
+
+    return variableName, variableDescription, variableUnit
+
+
+def add_metadata(var, dataValues, position, headerValues, variableName, variableDescription, variableUnit):
+ 
     """
     
     Adds the metadata of the variables. 
@@ -193,27 +219,29 @@ def add_metadata(dataValues, position, headerValues):
 	headerValues: list containing header values (ID, Type, Latitude, Longitude, Elevation)
     
     """
-  
     var.ID = dataValues[position][headerValues.index('ID')]
-    var.latitude = dataValues[position][headerValues.index('Latitude')]
-    var.longitude = dataValues[position][headerValues.index('Longitude')]
-    var.elevation = dataValues[position][headerValues.index('Elevation')]
-	        
-if __name__ == "__main__":
+    var.layer_desc = variableDescription
+    var.Latitude = dataValues[position][headerValues.index('Latitude')]
+    var.Longitude = dataValues[position][headerValues.index('Longitude')]
+    var.Elevation = dataValues[position][headerValues.index('Elevation')]
+
+    if variableName != 'precip' and variableName != 'runoff':
+        var.layer_units = variableUnit
+           
+def data_to_netcdf(fileInput, outputFileName):
    
     totalNumberOfVariables = 0
-
     totalNumberofLinesOfData = []
     sumOfVariableLengths = []
     
     # Finding the total number of days
-    fileHandle = open(sys.argv[1], 'r')
+    fileHandle = open(fileInput, 'r')
     numberOfDays = find_number_of_days(fileHandle)
     for day in range(numberOfDays):
 	totalNumberofLinesOfData.append(day)
 
     # Finding the first date
-    fileHandle = open(sys.argv[1], 'r')
+    fileHandle = open(fileInput, 'r')
     firstDate = find_first_date(fileHandle)
     year = firstDate[0]
     month = firstDate[1]
@@ -223,7 +251,7 @@ if __name__ == "__main__":
     second = firstDate[5]
 
     # Finding the variables and their lengths
-    fileHandle = open(sys.argv[1], 'r')
+    fileHandle = open(fileInput, 'r')
     variables = find_variables(fileHandle)
     variableNames = variables[0]
     variableLengths = variables[1]
@@ -232,23 +260,23 @@ if __name__ == "__main__":
 	sumOfVariableLengths.append(totalNumberOfVariables)
         
     # Finding the variable units
-    fileHandle = open(sys.argv[1], 'r')
+    fileHandle = open(fileInput, 'r')
     units = find_units(fileHandle)
     varNames = units[0]
     variableUnits = units[1]
 
     # Finding the metadata
-    fileHandle = open(sys.argv[1], 'r')
+    fileHandle = open(fileInput, 'r')
     metadata = find_metadata(fileHandle, totalNumberOfVariables)
     headerValues = metadata[0]
     dataValues = metadata[1]
  
     # Initialize new dataset
-    ncfile = netCDF4.Dataset('data.nc', mode='w')
+    ncfile = netCDF4.Dataset(outputFileName, mode='w')
 
     # Initialize dimensions
     time = ncfile.createDimension('time', numberOfDays)  
-
+  
     # Define time variable
     time = ncfile.createVariable('time', 'i4', ('time',))
     time.long_name = 'time'  
@@ -258,31 +286,51 @@ if __name__ == "__main__":
     # Define other variables
     for i in range(len(variableNames)):
         if variableLengths[i] > 1:
+
+	    metadata = get_metadata(variableNames[i])
+	    variableName = metadata[0]
+	    variableDescription = metadata[1]
+	    variableUnit = metadata[2]
+
 	    position = sumOfVariableLengths[i] - variableLengths[i]
 
 	    for j in range(variableLengths[i]):
 	        var = ncfile.createVariable(variableNames[i]+'_'+str(j+1), 'f4', ('time',))
-		add_metadata(dataValues, position+j, headerValues)
-		find_tmax_tmin_units(i, variableNames, varNames, variableUnits)
+	        var.layer_name = variableName+'_'+str(j+1) 
+		add_metadata(var, dataValues, position+j, headerValues, variableName, variableDescription, variableUnit)
+		find_tmax_tmin_units(i, var, variableNames, varNames, variableUnits)
 
 		fileHandle = open(sys.argv[1], 'r')
     	        columnValues = find_column_values(fileHandle, numberOfDays, position+j)		
 		var[:] = columnValues
 
     	else:
-	    var = ncfile.createVariable(variableNames[i], 'f4', ('time',)) 
+	    metadata = get_metadata(variableNames[i])
+	    variableName = metadata[0]
+	    variableDescription = metadata[1]
+	    variableUnit = metadata[2]
+	    	
 	    position = sumOfVariableLengths[i] - 1
-	    add_metadata(dataValues, position, headerValues)
-	    find_tmax_tmin_units(i, variableNames, varNames, variableUnits)
+            var = ncfile.createVariable(variableNames[i], 'f4', ('time',))
+	    var.layer_name = variableName  
+            add_metadata(var, dataValues, position, headerValues, variableName, variableDescription, variableUnit)
+	    find_tmax_tmin_units(i, var, variableNames, varNames, variableUnits)
 	    
 	    fileHandle = open(sys.argv[1], 'r')
     	    columnValues = find_column_values(fileHandle, numberOfDays, position)
             var[:] = columnValues
-    
+
+    # Global attributes
+    ncfile.title = 'Data File'
+    ncfile.nsteps = 1
+    ncfile.description = 'Variable information for ' + fileInput
+     
     # Close the 'ncfile' object
     ncfile.close()
     
-   
+if __name__ == "__main__":
+       
+    data_to_netcdf(sys.argv[1], 'data.nc')
     
 
     
