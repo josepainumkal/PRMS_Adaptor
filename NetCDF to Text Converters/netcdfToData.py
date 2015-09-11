@@ -7,7 +7,7 @@ import sys
 def find_attribute_names(fileHandle):
   
     headerLabelValues = []
-
+    
     for variable in fileHandle.variables:
         if variable != 'time':
 	    # Get attribute names of all the variables except time
@@ -17,13 +17,28 @@ def find_attribute_names(fileHandle):
     # Get attribute names - added Type and excluded units
     headerLabelValues.append('Type')
     for index in range(len(attributesOfAVariable)):
-        if attributesOfAVariable[index] != 'units':
+        if attributesOfAVariable[index] != 'layer_name' and attributesOfAVariable[index] != 'layer_desc' and attributesOfAVariable[index] != 'layer_units':
 	    headerLabelValues.append(str(attributesOfAVariable[index]))
-        
+
     return headerLabelValues
 
+def find_unit_label(fileHandle):
+  
+    for variable in fileHandle.variables:
+        if variable != 'time':
+	    # Get attribute names of all the variables except time
+            attributesOfAVariable = fileHandle.variables[variable].ncattrs()
+	    break
+    
+    # Get attribute names - added Type and excluded units
+    for index in range(len(attributesOfAVariable)):
+        if attributesOfAVariable[index] == 'layer_units':
+	    unitLabel = str(attributesOfAVariable[index])
 
-def find_and_write_attribute_values_to_file(headerLabelValues, fileHandle, temporaryFileHandle):
+    return unitLabel
+
+
+def find_and_write_attribute_values_to_file(headerLabelValues, fileHandle, temporaryFileHandle, variablesFromFile):
 
     temporaryFileHandle.write('///////////////////////////////////////////////////////////////////\n// Station metadata:\n// ')
     
@@ -45,6 +60,19 @@ def find_and_write_attribute_values_to_file(headerLabelValues, fileHandle, tempo
             for label in headerLabelValues:
                 if label != 'Type':
                     temporaryFileHandle.write(getattr(var, label)+' ')
+
+def find_variable_units_from_file(unitLabel, variablesFromFile, fileHandle):
+
+    variableUnitsFromFile = []
+
+    for variable in variablesFromFile:
+	var = fileHandle.variables[variable]
+        if variable == 'time':
+	     variableUnitsFromFile.append(getattr(var, 'units'))
+	elif variable != 'time':
+	     variableUnitsFromFile.append(getattr(var, unitLabel))
+	
+    return variableUnitsFromFile
 
 
 def find_variables_and_variable_units(variablesFromFile, variableUnitsFromFile):
@@ -70,7 +98,6 @@ def find_variables_and_variable_units_in_metadata(variables, variableUnits):
 
     variablesInMetaData = []
     variableUnitsInMetaData = []
-
     for variable in variables:
 
         if variable == 'tmax' or variable == 'tmin':
@@ -168,24 +195,23 @@ def write_variable_data_to_file(fileHandle, temporaryFileHandle, date):
 	temporaryFileHandle.write("\n")
 	timestamp = timestamp + 1
 	
-
-if __name__ == "__main__":
+def netcdf_to_data(inputFileName, outputFileName):
    
     variablesFromFile = [] 
     variableUnitsFromFile = []
     
-    fileHandle = Dataset(sys.argv[1], 'r')
-    temporaryFileHandle = open('LC.data', 'w')
+    fileHandle = Dataset(inputFileName, 'r')
+    temporaryFileHandle = open(outputFileName, 'w')
 
     for variable in fileHandle.variables:
         variablesFromFile.append(variable)
-    
-    for variable in fileHandle.variables:
-        variableUnitsFromFile.append(fileHandle.variables[variable].units)
-    
+       
     attributeNames = find_attribute_names(fileHandle)
-    attributeValues = find_and_write_attribute_values_to_file(attributeNames, fileHandle, temporaryFileHandle)
+    attributeValues = find_and_write_attribute_values_to_file(attributeNames, fileHandle, temporaryFileHandle, variablesFromFile)
 
+    unitLabel = find_unit_label(fileHandle)
+    variableUnitsFromFile = find_variable_units_from_file(unitLabel, variablesFromFile, fileHandle)
+    
     var = find_variables_and_variable_units(variablesFromFile, variableUnitsFromFile)
     variables = var[0]
     variableUnits = var[1]
@@ -202,3 +228,8 @@ if __name__ == "__main__":
 
     date = find_start_and_end_dates(fileHandle)
     write_variable_data_to_file(fileHandle, temporaryFileHandle, date)
+    
+if __name__ == "__main__":
+  
+    netcdf_to_data(sys.argv[1], 'LC.data')
+    
