@@ -22,7 +22,7 @@ def find_variables_from_file(fileHandle):
 
     variables = [variable for variable in fileHandle.variables]  
     for variable in variables:
-	if variable != 'lat' and variable != 'lon':
+	if variable != 'lat' and variable != 'lon' and variable != 'crs':
             variableNames.append(str(variable))
 	    variableType = fileHandle.variables[variable].dtype
 	    variableTypes.append(variableType)
@@ -141,7 +141,7 @@ def write_variable_data_to_file(temporaryFileHandle, fileHandle, variableNames, 
 	    for i in range(sizeOfLatitudeVariable):
 		for j in range(len(values[i])):
 	            temporaryFileHandle.write(str(values[i][j])+'\n')
-
+        
 	elif countOfDimensions[index] == 2:
 	    variables = [variable for variable in fileHandle.variables]  
             for variable in variables:
@@ -150,14 +150,14 @@ def write_variable_data_to_file(temporaryFileHandle, fileHandle, variableNames, 
 	   	    for i in range(sizeOfLatitudeVariable):
 	        	for j in range(len(values[i])):
 			    temporaryFileHandle.write(str(values[i][j])+'\n')
-
+	
 def netcdf_to_parameter(inputFileName, outputFileName):
 
     fileHandle = Dataset(inputFileName, 'r')
     temporaryFileHandle = open(outputFileName, 'w')
 
     # global attributes
-    attributes = fileHandle.ncattrs()
+    attributes = fileHandle.ncattrs()    
     for attribute in attributes:
         if attribute == 'title':
             attributeValue = repr(str(fileHandle.getncattr(attribute))).replace("'", "")
@@ -171,7 +171,7 @@ def netcdf_to_parameter(inputFileName, outputFileName):
     temporaryFileHandle.write('** Dimensions **\n')
     for index in range(len(dimensionNames)):
 	temporaryFileHandle.write('####\n'+dimensionNames[index]+'\n'+str(dimensionValues[index])+'\n')
-
+    
     # variables from file
     varFromFile = find_variables_from_file(fileHandle)
     variableNamesFromFile = varFromFile[0]
@@ -186,12 +186,12 @@ def netcdf_to_parameter(inputFileName, outputFileName):
 
     numberOfParameterValues = find_number_of_parameter_values(variableDimensions, dimensionNames, dimensionValues)
     countOfDimensions = find_count_of_dimensions(variableDimensions)
-    
+
     sizeOfLatitudeVariable = find_size_of_latitude_variable(fileHandle)
     write_variable_data_to_file(temporaryFileHandle, fileHandle, variableNames, \
         variableDimensions, countOfDimensions, sizeOfLatitudeVariable, \
         numberOfParameterValues, variableTypes)
-	    			
+    			
 if __name__ == "__main__":
 
     netcdf_to_parameter(sys.argv[1], 'LC.param')
