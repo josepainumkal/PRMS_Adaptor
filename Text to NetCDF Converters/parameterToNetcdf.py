@@ -1,4 +1,6 @@
-import netCDF4      
+import gdal
+import netCDF4
+import osr      
 import sys
 
 def find_dimensions(fileHandle):
@@ -153,7 +155,7 @@ def find_average_resolution(fileHandle, numberOfHruCells, numberOfRows, numberOf
 
     averageOfLatitudeValues = (maximumLatitudeValue-minimumLatitudeValue)/numberOfRows
     averageOfLongitudeValues = (maximumLongitudeValue-minimumLongitudeValue)/numberOfColumns
- 
+     
     latitudeOfFirstHru = latitudeValues[0]
     longitudeOfFirstHru = longitudeValues[0]
 
@@ -255,7 +257,12 @@ def parameter_to_netcdf(parameterFile, locationFile, numberOfHruCells, numberOfR
 	lonList.append(newValue)
 	previousValue = newValue
     lon[:] = lonList
-   
+
+    sr = osr.SpatialReference()
+    sr.ImportFromEPSG(4326)
+    crs = ncfile.createVariable('crs', 'S1',)
+    crs.spatial_ref = sr.ExportToWkt()
+    			   
     for index in range(len(spaceRelatedParameterNames)):
         value = find_variable_type(spaceRelatedParameterTypes[index])
 	metadata = add_metadata(spaceRelatedParameterNames[index])
@@ -268,6 +275,7 @@ def parameter_to_netcdf(parameterFile, locationFile, numberOfHruCells, numberOfR
 	var.dimension = spaceRelatedParameterDimensions[index]
 	var.layer_desc = parameterDescription
 	var.layer_units = parameterUnit
+        var.grid_mapping = "crs" 
 
         fileHandle = open('values.param', 'r')
         values = find_space_dependent_parameter_values(fileHandle, spaceRelatedParameterNames[index], numberOfHruCells)		
@@ -286,6 +294,7 @@ def parameter_to_netcdf(parameterFile, locationFile, numberOfHruCells, numberOfR
 	    var.dimension = spaceAndTimeRelatedParameterDimensions[index]+', '+'nmonths'
 	    var.layer_desc = parameterDescription
             var.layer_units = parameterUnit
+	    var.grid_mapping = "crs" 
 
 	    fileHandle = open('values.param', 'r')
             values = find_space_and_time_dependent_parameter_values(fileHandle, spaceAndTimeRelatedParameterNames[index], numberOfHruCells, monthIndex)		
