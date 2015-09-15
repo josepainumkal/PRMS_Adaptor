@@ -1,4 +1,6 @@
-import netCDF4      
+import gdal
+import netCDF4   
+import osr   
 import sys
 
 def find_location_values(fileHandle, numberOfHruCells, position):
@@ -84,31 +86,37 @@ def find_average_resolution(fileHandle, numberOfHruCells, numberOfRows, numberOf
 
     return averageOfLatitudeValues, averageOfLongitudeValues, latitudeOfFirstHru, longitudeOfFirstHru
 
-if __name__ == "__main__":
+def add_metadata(outputVariableName):
+
+    fileHandle = open('outputVariables.txt', 'r')
+    for line in fileHandle:
+        if outputVariableName in line:
+	    outputVariableNameFromFile = line.strip()		
+	    lengthOfOutputVariableName = len(outputVariableNameFromFile)
+	    positionOfNameStart = outputVariableNameFromFile.index(':') + 2
+ 	    outputVariableName = outputVariableNameFromFile[positionOfNameStart:lengthOfOutputVariableName]
+		
+	    outputVariableDescriptionFromFile = fileHandle.next().strip()
+	    lengthOfOutputVariableDescription = len(outputVariableDescriptionFromFile)
+	    positionOfDescriptionStart = outputVariableDescriptionFromFile.index(':') + 2
+	    outputVariableDescription = outputVariableDescriptionFromFile[positionOfDescriptionStart:lengthOfOutputVariableDescription]
+		
+	    outputVariableUnitFromFile = fileHandle.next().strip()
+	    lengthOfOutputVariableUnit = len(outputVariableUnitFromFile)
+	    positionOfUnitStart = outputVariableUnitFromFile.index(':') + 2
+	    outputVariableUnit = outputVariableUnitFromFile[positionOfUnitStart:lengthOfOutputVariableUnit]
+		
+	    break;
+
+    return outputVariableName, outputVariableDescription, outputVariableUnit
+
+
+def animation_to_netcdf(animationFile, locationFile, numberOfHruCells, numberOfRows, numberOfColumns, outputFileName):
    
     numberOfMetadataLines = 0
     timeValues = []
     numberOfHRUValues = [] 
-    
-    numberOfArgs = len(sys.argv)
-
-    for i in range(numberOfArgs):
-
-        if sys.argv[i] == "-data":
-	    animationFile = sys.argv[i+1]
-
-	elif sys.argv[i] == "-loc":
-	    locationFile = sys.argv[i+1]
-
-        elif sys.argv[i] ==  "-nhru":
-	    numberOfHruCells = int(sys.argv[i+1])
-
-        elif sys.argv[i] ==  "-nrows":
-	    numberOfRows = int(sys.argv[i+1])
-
-	elif sys.argv[i] ==  "-ncols":
-	    numberOfColumns = int(sys.argv[i+1])
-
+        
     fileHandle = open(animationFile, 'r')
     totalNumberOfLines = sum(1 for _ in fileHandle)
 
@@ -125,8 +133,8 @@ if __name__ == "__main__":
 	fileHandle.next()
     outputVariableNames = fileHandle.next().strip().split()[2:]
     fileHandle.next()
-    firstDate = fileHandle.next().strip().split()[0]
-
+    firstDate = fileHandle.next().strip().split()[0]     
+	
     fileHandle = open(locationFile, 'r')
     values = find_average_resolution(fileHandle, numberOfHruCells, numberOfRows, numberOfColumns)
     averageOfLatitudeValues = values[0]
@@ -135,7 +143,7 @@ if __name__ == "__main__":
     longitudeOfFirstHru = values[3]
 
     # Initialize new dataset
-    ncfile = netCDF4.Dataset('animation.nc', mode='w')
+    ncfile = netCDF4.Dataset(outputFileName, mode='w')
 
     # Initialize dimensions
     time_dim = ncfile.createDimension('time', numberOfTimestamps)  
@@ -173,17 +181,58 @@ if __name__ == "__main__":
 	previousValue = newValue
     lon[:] = lonList
 
+    sr = osr.SpatialReference()
+    sr.ImportFromEPSG(4326)
+    crs = ncfile.createVariable('crs', 'S1',)
+    crs.spatial_ref = sr.ExportToWkt()
+
     for index in range(len(outputVariableNames)):
+
+	metadata = add_metadata(outputVariableNames[index])
+	outputVariableName = metadata[0]
+	outputVariableDescription = metadata[1]
+	outputVariableUnit = metadata[2]
+
 	var = ncfile.createVariable(outputVariableNames[index], 'f8', ('time', 'lat', 'lon')) 
+	var.layer_name = outputVariableName
+	var.layer_desc = outputVariableDescription
+        var.layer_units = outputVariableUnit
+	var.grid_mapping = "crs" 
+	
         fileHandle = open(animationFile, 'r')
         columnValues = find_column_values(fileHandle, totalNumberOfDataValues, numberOfMetadataLines, index)		
 	var[:] = columnValues
 
     # Global attributes
     ncfile.title = 'PRMS Animation File'
-    ncfile.source = 'Lehman Creek Watershed'
+    ncfile.bands = 1
+    ncfile.bands_name = 'nsteps'
+    ncfile.bands_desc = 'Variable information for ' + animationFile
     
     # Close the 'ncfile' object
     ncfile.close()
+
+if __name__ == "__main__":
+
+    numberOfArgs = len(sys.argv)
+    for i in range(numberOfArgs):
+
+        if sys.argv[i] == "-data":
+	    animationFile = sys.argv[i+1]
+
+	elif sys.argv[i] == "-loc":
+	    locationFile = sys.argv[i+1]
+
+        elif sys.argv[i] ==  "-nhru":
+	    numberOfHruCells = int(sys.argv[i+1])
+
+        elif sys.argv[i] ==  "-nrows":
+	    numberOfRows = int(sys.argv[i+1])
+
+	elif sys.argv[i] ==  "-ncols":
+	    numberOfColumns = int(sys.argv[i+1])
+
+    animation_to_netcdf(animationFile, locationFile, numberOfHruCells, numberOfRows, numberOfColumns, 'animation.nc')
+
 
 
