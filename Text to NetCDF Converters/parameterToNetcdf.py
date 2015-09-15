@@ -303,7 +303,7 @@ def parameter_to_netcdf(parameterFile, locationFile, numberOfHruCells, numberOfR
     # Global attributes
     ncfile.title = open(parameterFile, 'r').readline().strip()
     ncfile.bands = 1
-    ncfile.bands_name = 'bands'
+    ncfile.bands_name = 'nsteps'
     ncfile.bands_desc = 'Parameter information for ' + parameterFile
 
     # Close the 'ncfile' object
