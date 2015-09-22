@@ -54,11 +54,42 @@ def find_column_values(numberOfVariables, numberOfDataValues, position):
    
     return values
 
-if __name__ == "__main__":
+def find_metadata(outputVariableName):
+
+    fileHandle = open('outputVariables.txt', 'r')
+    
+    for line in fileHandle:
+        if outputVariableName in line:
+	    variableNameFromFile = line.strip()		
+	    lengthOfVariableName = len(variableNameFromFile)
+	    positionOfNameStart = variableNameFromFile.index(':') + 2
+ 	    variableName = variableNameFromFile[positionOfNameStart:lengthOfVariableName]
+		
+	    variableDescriptionFromFile = fileHandle.next().strip()
+	    lengthOfVariableDescription = len(variableDescriptionFromFile)
+	    positionOfDescriptionStart = variableDescriptionFromFile.index(':') + 2
+	    variableDescription = variableDescriptionFromFile[positionOfDescriptionStart:lengthOfVariableDescription]
+		
+	    variableUnitFromFile = fileHandle.next().strip()
+	    lengthOfVariableUnit = len(variableUnitFromFile)
+	    positionOfUnitStart = variableUnitFromFile.index(':') + 2
+	    variableUnit = variableUnitFromFile[positionOfUnitStart:lengthOfVariableUnit]
+
+	    variableTypeFromFile = fileHandle.next().strip()
+	    lengthOfVariableType = len(variableTypeFromFile)
+	    positionOfTypeStart = variableTypeFromFile.index(':') + 2
+	    variableType = variableTypeFromFile[positionOfTypeStart:lengthOfVariableType]
+		
+	    break;
+          
+    return variableName, variableDescription, variableUnit, variableType
+
+
+def statvar_to_netcdf(fileInput, outputFileName):
    
     indexOfDataLine = []
 
-    fileHandle = open(sys.argv[1], 'r')
+    fileHandle = open(fileInput, 'r')
     lastLine = fileHandle.readlines()[-1].split()
     lastTimeStepValue = int(lastLine[0])
 
@@ -66,7 +97,7 @@ if __name__ == "__main__":
         indexOfDataLine.append(index)
     
     # Finding the number of variable values
-    fileHandle = open(sys.argv[1], 'r')
+    fileHandle = open(fileInput, 'r')
     numberOfVariables = int(fileHandle.next().strip())
        
     # Finding the names and array indices of output variables
@@ -84,7 +115,7 @@ if __name__ == "__main__":
     second = firstDate[5]
 
     # Initialize new dataset
-    ncfile = netCDF4.Dataset('statvar.nc', mode='w')
+    ncfile = netCDF4.Dataset(outputFileName, mode='w')
 
     # Initialize dimensions
     time = ncfile.createDimension('time', lastTimeStepValue)  
@@ -97,11 +128,33 @@ if __name__ == "__main__":
     
     # Define other variables  
     for index in range(len(outputVariableNames)):
-        var = ncfile.createVariable(outputVariableNames[index]+'_'+outputVariableArrayIndices[index], 'f4', ('time',))
+
+        metadata = find_metadata(outputVariableNames[index])
+	variableName = metadata[0]
+	variableDescription = metadata[1]
+	variableUnit = metadata[2]
+	variableType = metadata[3]
+        
+        if variableType == 'real':
+	    value = 'f4'
+	elif variableType == 'double':
+	    value = 'f4'
+	elif variableType == 'integer':
+	    value = 'i4'
+
+        var = ncfile.createVariable(outputVariableNames[index]+'_'+outputVariableArrayIndices[index], value, ('time',))
+	var.layer_name = variableName
+	var.layer_desc = variableDescription
+	var.layer_units = variableUnit
+      
         columnValues = find_column_values(numberOfVariables, lastTimeStepValue, index)
         var[:] = columnValues
     
     # Close the 'ncfile' object
     ncfile.close()
 
+
+if __name__ == "__main__":
+       
+    statvar_to_netcdf(sys.argv[1], 'statvar.nc')
 
