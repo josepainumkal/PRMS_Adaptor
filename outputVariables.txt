@@ -75,23 +75,23 @@ Data type: double
 
 Name: hru_ppt
 Description: Precipitation distributed to each HRU
-Units: nhru
-Data type: inches
+Units: inches
+Data type: real
 
 Name: hru_rain
 Description: Rain distributed to each HRU
-Units: nhru
-Data type: inches
+Units: inches
+Data type: real
 
 Name: hru_snow
 Description: Snow distributed to each HRU
-Units: nhru
-Data type: inches
+Units: inches
+Data type: real
 
 Name: humidity
 Description: Relative humidity at each measurement station
-Units: nhumid
-Data type: decimal fraction
+Units: decimal fraction
+Data type: real
 
 Name: humidity_hru
 Description: Relative humidity for each HRU
@@ -151,5 +151,20 @@ Data type: real
 Name: potet
 Description: Potential ET for each HRU
 Units: inches
+Data type: real
+
+Name: basin_actet
+Description: Basin area-weighted average actual ET
+Units: inches
+Data type: double
+
+Name: basin_cfs
+Description: Streamflow leaving the basin through the stream network
+Units: cfs
+Data type: double
+
+Name: runoff
+Description: Streamflow at each measurement station
+Units: runoff_units
 Data type: real
 
