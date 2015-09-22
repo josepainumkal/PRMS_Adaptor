@@ -25,7 +25,7 @@ def find_output_variables(fileHandle, numberOfVariables):
 
     return outputVariableNames, outputVariableArrayIndices
 
-def find_column_values(numberOfVariables, numberOfDataValues, position):
+def find_column_values(fileInput, numberOfVariables, numberOfDataValues, position):
 
     """
     
@@ -43,7 +43,7 @@ def find_column_values(numberOfVariables, numberOfDataValues, position):
 
     values = []
     
-    fileHandle = open(sys.argv[1], 'r')
+    fileHandle = open(fileInput, 'r')
     
     for i in range(numberOfVariables+1):
         fileHandle.next()
@@ -147,7 +147,7 @@ def statvar_to_netcdf(fileInput, outputFileName):
 	var.layer_desc = variableDescription
 	var.layer_units = variableUnit
       
-        columnValues = find_column_values(numberOfVariables, lastTimeStepValue, index)
+        columnValues = find_column_values(fileInput, numberOfVariables, lastTimeStepValue, index)
         var[:] = columnValues
     
     # Close the 'ncfile' object
