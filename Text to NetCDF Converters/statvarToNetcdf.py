@@ -150,6 +150,12 @@ def statvar_to_netcdf(fileInput, outputFileName):
         columnValues = find_column_values(fileInput, numberOfVariables, lastTimeStepValue, index)
         var[:] = columnValues
     
+    # Global attributes
+    ncfile.title = 'Statistic Variables File'
+    ncfile.bands = 1
+    ncfile.bands_name = 'nsteps'
+    ncfile.bands_desc = 'Output variable information for ' + fileInput
+
     # Close the 'ncfile' object
     ncfile.close()
 
