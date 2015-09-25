@@ -157,11 +157,14 @@ def netcdf_to_parameter(inputFileName, outputFileName):
     temporaryFileHandle = open(outputFileName, 'w')
 
     # global attributes
-    attributes = fileHandle.ncattrs()    
+    attributes = fileHandle.ncattrs()  
     for attribute in attributes:
         if attribute == 'title':
             attributeValue = repr(str(fileHandle.getncattr(attribute))).replace("'", "")
             temporaryFileHandle.write(attributeValue+'\n')
+	if attribute == 'version':
+            attributeValue = repr(str(fileHandle.getncattr(attribute))).replace("'", "")
+	    temporaryFileHandle.write(attributeValue+'\n')
 
     # dimensions
     dim = find_dimensions(fileHandle)
