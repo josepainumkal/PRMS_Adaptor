@@ -26,6 +26,7 @@ Data File: python dataToNetcdf.py LC.data
 Control File: python controlToNetcdf.py LC.control
 Parameter File: python parameterToNetcdf.py -nrows 49 -ncols 96 -data LC.param -loc XY.DAT -nhru 4704
 Animation File: python animationToNetcdf.py -data animation.out.nhru -loc XY.DAT -nhru 4704 -nrows 49 -ncols 96
+prms.out File: python prmsoutToNetcdf.py prms.out
 
     -nrows : number of rows of the dataset 
     -ncols : number of columns of the dataset
