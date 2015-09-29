@@ -119,16 +119,17 @@ def find_size_of_latitude_variable(fileHandle):
 
 def write_variable_data_to_file(temporaryFileHandle, fileHandle, variableNames, \
     variableDimensions, countOfDimensions, sizeOfLatitudeVariable, \
-    numberOfParameterValues, variableTypes):
+    numberOfParameterValues, variableTypes, numberOfHruCells):
 
     temporaryFileHandle.write('** Parameters **\n')
     
     for index in range(len(variableNames)):
+
 	temporaryFileHandle.write('####\n'+variableNames[index]+'\n'+str(countOfDimensions[index])+'\n')
 
 	if countOfDimensions[index] == 1:
 	    temporaryFileHandle.write(variableDimensions[index]+'\n')
-	elif countOfDimensions[index] == 2:
+	if countOfDimensions[index] == 2:
 	    dimensionName = variableDimensions[index].strip().split(',')
 	    for i in range(len(dimensionName)):
                 temporaryFileHandle.write(dimensionName[i].strip()+'\n')
@@ -137,11 +138,17 @@ def write_variable_data_to_file(temporaryFileHandle, fileHandle, variableNames, 
 	temporaryFileHandle.write(str(variableTypes[index])+'\n')
         
 	if countOfDimensions[index] == 1:
-	    values = fileHandle.variables[variableNames[index]][:,:]
-	    for i in range(sizeOfLatitudeVariable):
-		for j in range(len(values[i])):
-	            temporaryFileHandle.write(str(values[i][j])+'\n')
-        
+	    if numberOfParameterValues[index] == numberOfHruCells:
+	        values = fileHandle.variables[variableNames[index]][:,:]
+	        for i in range(sizeOfLatitudeVariable):
+		    for j in range(len(values[i])):
+	                temporaryFileHandle.write(str(values[i][j])+'\n')
+
+	    else:
+	        values = fileHandle.variables[variableNames[index]][:]
+	        for i in range(len(values)):
+	            temporaryFileHandle.write(str(values[i])+'\n')
+
 	elif countOfDimensions[index] == 2:
 	    variables = [variable for variable in fileHandle.variables]  
             for variable in variables:
@@ -151,21 +158,24 @@ def write_variable_data_to_file(temporaryFileHandle, fileHandle, variableNames, 
 	        	for j in range(len(values[i])):
 			    temporaryFileHandle.write(str(values[i][j])+'\n')
 	
+
 def netcdf_to_parameter(inputFileName, outputFileName):
 
     fileHandle = Dataset(inputFileName, 'r')
     temporaryFileHandle = open(outputFileName, 'w')
 
     # global attributes
-    attributes = fileHandle.ncattrs()  
+    attributes = fileHandle.ncattrs()    
     for attribute in attributes:
         if attribute == 'title':
             attributeValue = repr(str(fileHandle.getncattr(attribute))).replace("'", "")
             temporaryFileHandle.write(attributeValue+'\n')
-	if attribute == 'version':
+        if attribute == 'version':
             attributeValue = repr(str(fileHandle.getncattr(attribute))).replace("'", "")
 	    temporaryFileHandle.write(attributeValue+'\n')
-
+	if attribute == 'number_of_hrus':
+	    numberOfHruCells = int(repr(str(fileHandle.getncattr(attribute))).replace("'", ""))
+	    
     # dimensions
     dim = find_dimensions(fileHandle)
     dimensionNames = dim[0]
@@ -193,7 +203,7 @@ def netcdf_to_parameter(inputFileName, outputFileName):
     sizeOfLatitudeVariable = find_size_of_latitude_variable(fileHandle)
     write_variable_data_to_file(temporaryFileHandle, fileHandle, variableNames, \
         variableDimensions, countOfDimensions, sizeOfLatitudeVariable, \
-        numberOfParameterValues, variableTypes)
+        numberOfParameterValues, variableTypes, numberOfHruCells)
     			
 if __name__ == "__main__":
 
