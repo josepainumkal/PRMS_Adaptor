@@ -2,6 +2,9 @@ import gdal
 import netCDF4
 import osr      
 import sys
+import time
+
+start_time = time.time()
 
 def find_dimensions(fileHandle):
 
@@ -358,7 +361,7 @@ def parameter_to_netcdf(parameterFile, locationFile, numberOfHruCells, numberOfR
     fileHandle = open(parameterFile, 'r')
     ncfile.title = fileHandle.next().strip()
     ncfile.version = fileHandle.next().strip()
-    ncfile.bands = 1
+    ncfile.nsteps = 1
     ncfile.bands_name = 'nsteps'
     ncfile.bands_desc = 'Parameter information for ' + parameterFile
     ncfile.number_of_hrus = numberOfHruCells
@@ -387,6 +390,7 @@ if __name__ == "__main__":
 	    numberOfColumns = int(sys.argv[i+1])
        
     parameter_to_netcdf(parameterFile, locationFile, numberOfHruCells, numberOfRows, numberOfColumns, 'parameter.nc')
+    print(time.time() - start_time)
 
     
 
