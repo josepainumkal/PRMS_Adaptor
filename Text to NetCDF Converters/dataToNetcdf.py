@@ -1,4 +1,7 @@
-import netCDF4      
+#data to netcdf converter
+#originally from Lisa Palathingal at https://github.com/lisapalathingal/PRMS_Adaptor
+#modified for use in this coding structure
+import netCDF4
 import sys
 
 def find_number_of_days(fileHandle):
@@ -184,7 +187,7 @@ def find_tmax_tmin_units(index, var, variableNames, varNames, variableUnits):
 
 def get_metadata(variableName):
 
-    fileHandle = open('dataVariableDetails.txt', 'r')
+    fileHandle = open('../dataVariableDetails.txt', 'r')
     for line in fileHandle:
         if variableName in line:
 	    variableNameFromFile = line.strip()		
@@ -300,7 +303,7 @@ def data_to_netcdf(fileInput, outputFileName):
 		add_metadata(var, dataValues, position+j, headerValues, variableName, variableDescription, variableUnit)
 		find_tmax_tmin_units(i, var, variableNames, varNames, variableUnits)
 
-		fileHandle = open(sys.argv[1], 'r')
+		fileHandle = open(fileInput, 'r')
     	        columnValues = find_column_values(fileHandle, numberOfDays, position+j)		
 		var[:] = columnValues
 
@@ -316,14 +319,14 @@ def data_to_netcdf(fileInput, outputFileName):
             add_metadata(var, dataValues, position, headerValues, variableName, variableDescription, variableUnit)
 	    find_tmax_tmin_units(i, var, variableNames, varNames, variableUnits)
 	    
-	    fileHandle = open(sys.argv[1], 'r')
+	    fileHandle = open(fileInput, 'r')
     	    columnValues = find_column_values(fileHandle, numberOfDays, position)
             var[:] = columnValues
 
 
     # Global attributes
     ncfile.title = 'Date File'
-    ncfile.bands = 1
+    ncfile.nsteps = 1
     ncfile.bands_name = 'nsteps'
     ncfile.bands_desc = 'Variable information for ' + fileInput
      
