@@ -2,6 +2,9 @@ import gdal
 import netCDF4   
 import osr   
 import sys
+import time
+
+start_time = time.time()
 
 def find_location_values(fileHandle, numberOfHruCells, position):
 
@@ -205,7 +208,7 @@ def animation_to_netcdf(animationFile, locationFile, numberOfHruCells, numberOfR
 
     # Global attributes
     ncfile.title = 'PRMS Animation File'
-    ncfile.bands = 1
+    ncfile.nsteps = 1
     ncfile.bands_name = 'nsteps'
     ncfile.bands_desc = 'Variable information for ' + animationFile
     
@@ -233,6 +236,7 @@ if __name__ == "__main__":
 	    numberOfColumns = int(sys.argv[i+1])
 
     animation_to_netcdf(animationFile, locationFile, numberOfHruCells, numberOfRows, numberOfColumns, 'animation.nc')
+    print(time.time() - start_time)
 
 
 
