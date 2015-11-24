@@ -40,7 +40,9 @@ def copyParameterSectionFromInputFile(fileHandle):
         
     """
     
-    temporaryFileHandle = open(os.getcwd()+'/prms/input_files/values.param', 'w')
+    projectRoot = os.path.dirname(os.path.dirname(__file__))
+    fileLocation = os.path.join(projectRoot, 'input_files/values.param')
+    temporaryFileHandle = open(fileLocation, 'w')
     foundParameterSection = False
     lines = fileHandle.readlines()
     for line in lines:
@@ -196,7 +198,9 @@ def find_average_resolution(fileHandle, numberOfHruCells, numberOfRows, numberOf
 
 def add_metadata(parameterName):
 
-    fileHandle = open(os.getcwd()+'/prms/variableDetails/parameterDetails.txt', 'r')
+    projectRoot = os.path.dirname(os.path.dirname(__file__))
+    fileLocation = os.path.join(projectRoot, 'variableDetails/parameterDetails.txt')
+    fileHandle = open(fileLocation, 'r')
     for line in fileHandle:
         if parameterName in line:
 	    if 'Name' in line:
@@ -239,7 +243,9 @@ def parameter_to_netcdf(parameterFile, locationFile, numberOfHruCells, numberOfR
     fileHandle = open(parameterFile, 'r')
     copyParameterSectionFromInputFile(fileHandle)
 
-    fileHandle = open(os.getcwd()+'/prms/input_files/values.param', 'r')
+    projectRoot = os.path.dirname(os.path.dirname(__file__))
+    fileLocation = os.path.join(projectRoot, 'input_files/values.param')
+    fileHandle = open(fileLocation, 'r')
     parameters = find_parameters(fileHandle, numberOfHruCells)
     spaceRelatedParameterNames = parameters[0]
     spaceRelatedParameterTypes = parameters[1]
@@ -315,7 +321,9 @@ def parameter_to_netcdf(parameterFile, locationFile, numberOfHruCells, numberOfR
 	var.layer_units = parameterUnit
         var.grid_mapping = "crs" 
 
-        fileHandle = open(os.getcwd()+'/prms/input_files/values.param', 'r')
+        projectRoot = os.path.dirname(os.path.dirname(__file__))
+    	fileLocation = os.path.join(projectRoot, 'input_files/values.param')
+    	fileHandle = open(fileLocation, 'r')
         values = find_space_dependent_parameter_values(fileHandle, spaceRelatedParameterNames[index], numberOfHruCells)		
 	var[:] = values
     
@@ -334,7 +342,9 @@ def parameter_to_netcdf(parameterFile, locationFile, numberOfHruCells, numberOfR
             var.layer_units = parameterUnit
 	    var.grid_mapping = "crs" 
 
-	    fileHandle = open(os.getcwd()+'/prms/input_files/values.param', 'r')
+	    projectRoot = os.path.dirname(os.path.dirname(__file__))
+    	    fileLocation = os.path.join(projectRoot, 'input_files/values.param')
+    	    fileHandle = open(fileLocation, 'r')
             values = find_space_and_time_dependent_parameter_values(fileHandle, spaceAndTimeRelatedParameterNames[index], numberOfHruCells, monthIndex)		
 	    var[:] = values
     

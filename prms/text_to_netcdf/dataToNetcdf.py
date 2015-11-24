@@ -189,7 +189,9 @@ def find_tmax_tmin_units(index, var, variableNames, varNames, variableUnits):
 
 def get_metadata(variableName):
 
-    fileHandle = open(os.getcwd()+'/prms/variableDetails/dataVariableDetails.txt', 'r')
+    projectRoot = os.path.dirname(os.path.dirname(__file__))
+    fileLocation = os.path.join(projectRoot, 'variableDetails/dataVariableDetails.txt')
+    fileHandle = open(fileLocation, 'r')
     for line in fileHandle:
         if variableName in line:
 	    variableNameFromFile = line.strip()		

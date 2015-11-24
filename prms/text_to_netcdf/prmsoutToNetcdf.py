@@ -84,7 +84,9 @@ def find_variables_units_and_values(fileHandle):
 
 def add_metadata(variableName):
 
-    fileHandle = open(os.getcwd()+'/prms/variableDetails/prmsoutVariables.txt', 'r')
+    projectRoot = os.path.dirname(os.path.dirname(__file__))
+    fileLocation = os.path.join(projectRoot, 'variableDetails/prmsoutVariables.txt')
+    fileHandle = open(fileLocation, 'r')
     for line in fileHandle:
         if variableName in line:
 	    variableName = find_value(line)

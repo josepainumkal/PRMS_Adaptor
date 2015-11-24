@@ -89,7 +89,9 @@ def find_average_resolution(fileHandle, numberOfHruCells, numberOfRows, numberOf
 
 def add_metadata(outputVariableName):
 
-    fileHandle = open(os.getcwd()+'/prms/variableDetails/outputVariables.txt', 'r')
+    projectRoot = os.path.dirname(os.path.dirname(__file__))
+    fileLocation = os.path.join(projectRoot, 'variableDetails/outputVariables.txt')
+    fileHandle = open(fileLocation, 'r')
     for line in fileHandle:
         if outputVariableName in line:
 	    outputVariableNameFromFile = line.strip()		
