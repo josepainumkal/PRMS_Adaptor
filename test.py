@@ -1,7 +1,4 @@
 import os
-import sys
-sys.path.append('/home/likewise-open/UNR/lpalathingal/Desktop/prms')
-
 
 from prms.text_to_netcdf import dataToNetcdf
 dataToNetcdf.data_to_netcdf(os.getcwd()+'/prms/input_files/LC.data', os.getcwd()+'/prms/outputs/data.nc')
@@ -13,7 +10,10 @@ from prms.text_to_netcdf import controlToNetcdf
 controlToNetcdf.control_to_netcdf(os.getcwd()+'/prms/input_files/LC.control', os.getcwd()+'/prms/outputs/control.nc')
 
 from prms.text_to_netcdf import animationToNetcdf
-animationToNetcdf.animation_to_netcdf(os.getcwd()+'/prms/output_files/animation.out.nhru', os.getcwd()+'/prms/XY.DAT', 4704, 49, 96, os.getcwd()+'/prms/outputs/animation.nc')
+animationToNetcdf.animation_to_netcdf(os.getcwd()+'/prms/output_files/animation.out.nhru', os.getcwd()+'/prms/outputs/parameter.nc', os.getcwd()+'/prms/outputs/animation.nc')
+
+# from prms.text_to_netcdf import animationToNetcdf
+# animationToNetcdf.animation_to_netcdf(os.getcwd()+'/prms/output_files/animation.out.nhru', os.getcwd()+'/prms/XY.DAT', 4704, 49, 96, os.getcwd()+'/prms/outputs/animation.nc')
 
 from prms.text_to_netcdf import prmsoutToNetcdf
 prmsoutToNetcdf.prmsout_to_netcdf(os.getcwd()+'/prms/output_files/prms.out', os.getcwd()+'/prms/outputs/prmsout.nc')
@@ -26,3 +26,5 @@ netcdfToData.netcdf_to_data(os.getcwd()+'/prms/outputs/data.nc', os.getcwd()+'/p
 
 from prms.netcdf_to_text import netcdfToParameter
 netcdfToParameter.netcdf_to_parameter(os.getcwd()+'/prms/outputs/parameter.nc', os.getcwd()+'/prms/input_files/LC.param')
+
+
