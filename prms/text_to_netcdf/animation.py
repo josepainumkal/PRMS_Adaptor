@@ -3,7 +3,6 @@ import netCDF4
 import osr   
 import sys
 import os
-from netCDF4 import Dataset
 
 def find_location_values(fileHandle, numberOfHruCells, position):
 
@@ -114,42 +113,9 @@ def add_metadata(outputVariableName):
 
     return outputVariableName, outputVariableDescription, outputVariableUnit
 
-def extract_row_column_hru_information(parameterFile):
 
-    fileHandle = Dataset(parameterFile, 'r')
-    attributes = fileHandle.ncattrs()    
-    for attribute in attributes:
-        if attribute == 'number_of_hrus':
-            numberOfHruCells = int(repr(str(fileHandle.getncattr(attribute))).replace("'", ""))
-	if attribute == 'number_of_rows':
-            numberOfRows = int(repr(str(fileHandle.getncattr(attribute))).replace("'", ""))
-        if attribute == 'number_of_columns':
-            numberOfColumns = int(repr(str(fileHandle.getncattr(attribute))).replace("'", ""))
-
-    return numberOfHruCells, numberOfRows, numberOfColumns
-
-def extract_lat_and_lon_information(parameterFile):
-
-    fileHandle = Dataset(parameterFile, 'r')
-    latitude = 'lat'
-    latitudeValues = fileHandle.variables[latitude][:]
-    longitude = 'lon'
-    longitudeValues = fileHandle.variables[longitude][:]
-    
-    return latitudeValues, longitudeValues
-
-
-def animation_to_netcdf(animationFile, parameterFile, outputFileName):
-
-    values = extract_row_column_hru_information(parameterFile)    
-    numberOfHruCells = values[0]
-    numberOfRows = values[1]
-    numberOfColumns = values[2]
-
-    values = extract_lat_and_lon_information(parameterFile)
-    latitudeValues = values[0]
-    longitudeValues = values[1]
-    
+def animation_to_netcdf(animationFile, locationFile, numberOfHruCells, numberOfRows, numberOfColumns, outputFileName):
+   
     numberOfMetadataLines = 0
     timeValues = []
     numberOfHRUValues = [] 
@@ -172,6 +138,13 @@ def animation_to_netcdf(animationFile, parameterFile, outputFileName):
     fileHandle.next()
     firstDate = fileHandle.next().strip().split()[0]     
 	
+    fileHandle = open(locationFile, 'r')
+    values = find_average_resolution(fileHandle, numberOfHruCells, numberOfRows, numberOfColumns)
+    averageOfLatitudeValues = values[0]
+    averageOfLongitudeValues = values[1]
+    latitudeOfFirstHru = values[2]
+    longitudeOfFirstHru = values[3]
+
     # Initialize new dataset
     ncfile = netCDF4.Dataset(outputFileName, mode='w')
 
@@ -187,15 +160,29 @@ def animation_to_netcdf(animationFile, parameterFile, outputFileName):
 	timeValues.append(index+1)	
     time[:] = timeValues
    
+    latList = []
+    latList.append(latitudeOfFirstHru)
+    previousValue = latitudeOfFirstHru
     lat = ncfile.createVariable('lat', 'f8', ('lat',))
     lat.long_name = 'latitude'  
     lat.units = 'degrees_north'
-    lat[:] = latitudeValues
+    for i in range(numberOfRows - 1):
+	newValue = previousValue - averageOfLatitudeValues
+	latList.append(newValue)
+	previousValue = newValue
+    lat[:] = latList
 
+    lonList = []
+    lonList.append(longitudeOfFirstHru)
+    previousValue = longitudeOfFirstHru
     lon = ncfile.createVariable('lon', 'f8', ('lon',))
     lon.long_name = 'longitude'  
     lon.units = 'degrees_east'
-    lon[:] = longitudeValues
+    for i in range(numberOfColumns - 1):
+	newValue = previousValue + averageOfLongitudeValues
+	lonList.append(newValue)
+	previousValue = newValue
+    lon[:] = lonList
 
     sr = osr.SpatialReference()
     sr.ImportFromEPSG(4326)
@@ -227,17 +214,28 @@ def animation_to_netcdf(animationFile, parameterFile, outputFileName):
     
     # Close the 'ncfile' object
     ncfile.close()
-    
 
 if __name__ == "__main__":
 
     numberOfArgs = len(sys.argv)
-    
     for i in range(numberOfArgs):
+
         if sys.argv[i] == "-data":
 	    animationFile = sys.argv[i+1]
 
-    animation_to_netcdf(animationFile, 'parameter.nc', 'animation.nc')
+	elif sys.argv[i] == "-loc":
+	    locationFile = sys.argv[i+1]
+
+        elif sys.argv[i] ==  "-nhru":
+	    numberOfHruCells = int(sys.argv[i+1])
+
+        elif sys.argv[i] ==  "-nrows":
+	    numberOfRows = int(sys.argv[i+1])
+
+	elif sys.argv[i] ==  "-ncols":
+	    numberOfColumns = int(sys.argv[i+1])
+
+    animation_to_netcdf(animationFile, locationFile, numberOfHruCells, numberOfRows, numberOfColumns, 'animation.nc')
   
 
 
