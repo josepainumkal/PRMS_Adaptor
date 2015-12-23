@@ -1,19 +1,22 @@
 from dateutil.rrule import rrule, DAILY
 from netCDF4 import Dataset
 import datetime
+import time
 import os
 import sys
+from pyee import EventEmitter
+
 
 def find_attribute_names(fileHandle):
-  
+
     headerLabelValues = []
-    
+
     for variable in fileHandle.variables:
         if variable != 'time':
 	    # Get attribute names of all the variables except time
             attributesOfAVariable = fileHandle.variables[variable].ncattrs()
 	    break
-    
+
     # Get attribute names - added Type and excluded units
     headerLabelValues.append('Type')
     for index in range(len(attributesOfAVariable)):
@@ -23,13 +26,13 @@ def find_attribute_names(fileHandle):
     return headerLabelValues
 
 def find_unit_label(fileHandle):
-  
+
     for variable in fileHandle.variables:
         if variable != 'time':
 	    # Get attribute names of all the variables except time
             attributesOfAVariable = fileHandle.variables[variable].ncattrs()
 	    break
-    
+
     # Get attribute names - added Type and excluded units
     for index in range(len(attributesOfAVariable)):
         if attributesOfAVariable[index] == 'layer_units':
@@ -41,7 +44,7 @@ def find_unit_label(fileHandle):
 def find_and_write_attribute_values_to_file(headerLabelValues, fileHandle, temporaryFileHandle, variablesFromFile):
 
     temporaryFileHandle.write('///////////////////////////////////////////////////////////////////\n// Station metadata:\n// ')
-    
+
     for label in headerLabelValues:
         temporaryFileHandle.write(label+' ')
 
@@ -71,7 +74,7 @@ def find_variable_units_from_file(unitLabel, variablesFromFile, fileHandle):
 	     variableUnitsFromFile.append(getattr(var, 'units'))
 	elif variable != 'time':
 	     variableUnitsFromFile.append(getattr(var, unitLabel))
-	
+
     return variableUnitsFromFile
 
 
@@ -85,11 +88,11 @@ def find_variables_and_variable_units(variablesFromFile, variableUnitsFromFile):
             position = variablesFromFile[index].find('_')
             if variablesFromFile[index][0:position] not in variables:
                 variables.append(str(variablesFromFile[index][0:position]))
-		variableUnits.append(str(variableUnitsFromFile[index]))	
-    
+		variableUnits.append(str(variableUnitsFromFile[index]))
+
         elif variablesFromFile[index] != 'time':
-            variables.append(str(variablesFromFile[index]))	
-	    variableUnits.append(str(variableUnitsFromFile[index]))	
+            variables.append(str(variablesFromFile[index]))
+	    variableUnits.append(str(variableUnitsFromFile[index]))
 
     return variables, variableUnits
 
@@ -109,7 +112,7 @@ def find_variables_and_variable_units_in_metadata(variables, variableUnits):
 	    variablesInMetaData.append(variable)
             position = variables.index(variable)
             variableUnitsInMetaData.append(variableUnits[position])
-      
+
     return variablesInMetaData, variableUnitsInMetaData
 
 
@@ -131,14 +134,14 @@ def find_count_of_variables(variables, variablesFromFile):
 
     for index in range(len(variables)):
         for variable in variablesFromFile:
-	
+
 	    if '_' in variable:
 	        position = variable.find('_')
 	        variable = variable[0:position]
-	
+
 	    if variables[index] == variable:
 	        count = count + 1
-    
+
         if(count > 0):
             countOfVariables.append(count)
         count = 0
@@ -161,10 +164,10 @@ def find_start_and_end_dates(fileHandle):
             startYear = int(startDate.rsplit('-')[0].strip())
 	    startMonth = int(startDate.rsplit('-')[1].strip())
 	    startDay = int(startDate.rsplit('-')[2].strip())
-        
+
 	    shape = str(fileHandle.variables[variable].shape)
 	    numberOfValues = int(shape.rsplit(',')[0].strip('('))
-	
+
 	    endDate = str(datetime.date (startYear, startMonth, startDay) + datetime.timedelta (days = numberOfValues-1))
             endYear = int(endDate.rsplit('-')[0].strip())
 	    endMonth = int(endDate.rsplit('-')[1].strip())
@@ -173,51 +176,70 @@ def find_start_and_end_dates(fileHandle):
     return startYear, startMonth, startDay, endYear, endMonth, endDay
 
 
-def write_variable_data_to_file(fileHandle, temporaryFileHandle, date):
-    
+def write_variable_data_to_file(fileHandle, temporaryFileHandle, date,event_emitter=None,**kwargs):
+
     startYear = date[0]
     startMonth = date[1]
     startDay = date[2]
     endYear = date[3]
     endMonth = date[4]
-    endDay = date[5]    
-	
+    endDay = date[5]
+
     timestamp = 0
 
     startDate = datetime.date(startYear, startMonth, startDay)
     endDate = datetime.date(endYear, endMonth, endDay)
-	    
+    prg = 0.10
     for dt in rrule(DAILY, dtstart=startDate, until=endDate):
     	temporaryFileHandle.write(dt.strftime("%Y %m %d 0 0 0")+" ")
 	for variable in fileHandle.variables:
-	    if variable != 'time':
+            if variable != 'time':
 		temporaryFileHandle.write(str(fileHandle.variables[variable][timestamp])+" ")
 	temporaryFileHandle.write("\n")
-	timestamp = timestamp + 1
-	
-def netcdf_to_data(inputFileName, outputFileName):
-   
-    variablesFromFile = [] 
-    variableUnitsFromFile = []
+        progress_value = prg/(endDate-startDate).days * 100
+        
+	if progress_value <= 99.99:
+            kwargs['event_name'] = 'nc_to_data'
+	    kwargs['event_description'] = 'Some desc'
+            kwargs['progress_value'] = format(progress_value, '.2f')
+
+	    '''
+            print kwargs['event_name']
+            print kwargs['event_description']
+            print kwargs['progress_value']
+            time.sleep(.1)    
+	    '''
+            
+	    prg += 1
+            event_emitter.emit('progress',**kwargs)
+        timestamp = timestamp + 1
+
+
+def netcdf_to_data(inputFileName, outputFileName,event_emitter=None, **kwargs):
+
+    start = time.time()
     
+    variablesFromFile = []
+    variableUnitsFromFile = []
+
     fileHandle = Dataset(inputFileName, 'r')
     temporaryFileHandle = open(outputFileName, 'w')
 
     for variable in fileHandle.variables:
         variablesFromFile.append(variable)
-       
+
     attributeNames = find_attribute_names(fileHandle)
     attributeValues = find_and_write_attribute_values_to_file(attributeNames, fileHandle, temporaryFileHandle, variablesFromFile)
 
     unitLabel = find_unit_label(fileHandle)
     variableUnitsFromFile = find_variable_units_from_file(unitLabel, variablesFromFile, fileHandle)
-    
+
     var = find_variables_and_variable_units(variablesFromFile, variableUnitsFromFile)
     variables = var[0]
     variableUnits = var[1]
 
     varInMetadata = find_variables_and_variable_units_in_metadata(variables, variableUnits)
-    variablesInMetadata = varInMetadata[0] 
+    variablesInMetadata = varInMetadata[0]
     variableUnitsInMetadata = varInMetadata[1]
 
     write_variable_units_to_file(temporaryFileHandle, variablesInMetadata, variableUnitsInMetadata)
@@ -225,11 +247,37 @@ def netcdf_to_data(inputFileName, outputFileName):
     write_variables_to_file(temporaryFileHandle, variables, countOfVariables)
 
     temporaryFileHandle.write('####################################################################\n')
-
     date = find_start_and_end_dates(fileHandle)
-    write_variable_data_to_file(fileHandle, temporaryFileHandle, date)
+
+    time_1 = time.time()
+    kwargs['event_name'] = 'nc_to_data'
+    kwargs['event_description'] = 'creating input data file from netcdf file'
+    kwargs['progress_value'] = 0.00
     
-if __name__ == "__main__":
-  
-    netcdf_to_data(sys.argv[1], 'LC.data')
-    
+    '''
+    print kwargs['event_name']
+    print kwargs['event_description']
+    print kwargs['progress_value']
+    time.sleep(.1)
+    '''
+
+    if event_emitter:
+        event_emitter.emit('progress',**kwargs)
+
+    write_variable_data_to_file(fileHandle, temporaryFileHandle, date,event_emitter=event_emitter)
+
+    time_2 = time.time()
+    kwargs['event_name'] = 'nc_to_data'
+    kwargs['event_description'] = 'creating input data file from output netcdf file'
+    kwargs['progress_value'] = 100
+
+    '''
+    print kwargs['event_name']
+    print kwargs['event_description']
+    print kwargs['progress_value']
+    time.sleep(.1)
+    '''
+
+    if event_emitter:
+        event_emitter.emit('progress',**kwargs)
+
