@@ -235,8 +235,6 @@ def find_variable_type(parameterType):
 
 def parameter_to_netcdf(parameterFile, locationFile, numberOfHruCells, numberOfRows, numberOfColumns, outputFileName, event_emitter=None, **kwargs):
    
-    start = time.time()
-
     fileHandle = open(parameterFile, 'r')
     dimensions = find_dimensions(fileHandle)
     dimensionNames = dimensions[0]
@@ -313,10 +311,12 @@ def parameter_to_netcdf(parameterFile, locationFile, numberOfHruCells, numberOfR
     kwargs['event_description'] = 'creating netcdf file from input parameter file'
     kwargs['progress_value'] = 0.00
 
+    '''
     print kwargs['event_name']
     print kwargs['event_description']
     print kwargs['progress_value']
     time.sleep(.1)   
+    '''
 
     if event_emitter:
         event_emitter.emit('progress',**kwargs)
@@ -350,11 +350,13 @@ def parameter_to_netcdf(parameterFile, locationFile, numberOfHruCells, numberOfR
         kwargs['event_description'] = 'creating netcdf file from input parameter file'
         kwargs['progress_value'] = format(progress_value, '.2f')
 	
+	'''
         print kwargs['event_name']
         print kwargs['event_description']
         print kwargs['progress_value']
 	time.sleep(.1)
-	
+	'''
+
 	prg += 1
         event_emitter.emit('progress', **kwargs)
 
@@ -403,10 +405,12 @@ def parameter_to_netcdf(parameterFile, locationFile, numberOfHruCells, numberOfR
     kwargs['event_description'] = 'creating netcdf file from input parameter file'
     kwargs['progress_value'] = 100
 
+    '''
     print kwargs['event_name']
     print kwargs['event_description']
     print kwargs['progress_value']
     time.sleep(.1)   
+    '''
 
     if event_emitter:
         event_emitter.emit('progress',**kwargs)

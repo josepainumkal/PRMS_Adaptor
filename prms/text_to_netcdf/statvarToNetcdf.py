@@ -3,6 +3,7 @@ import netCDF4
 import osr  
 import sys
 import os
+import time
 
 def find_output_variables(fileHandle, numberOfVariables):
     
@@ -117,7 +118,7 @@ def find_metadata(outputVariableName):
     return variableName, variableDescription, variableUnit, variableType
 
 
-def statvar_to_netcdf(statvarFile, locationFile, outputFileName):
+def statvar_to_netcdf(statvarFile, locationFile, outputFileName, event_emitter=None, **kwargs):
    
     indexOfDataLine = []
 
@@ -167,6 +168,24 @@ def statvar_to_netcdf(statvarFile, locationFile, outputFileName):
     crs = ncfile.createVariable('crs', 'S1',)
     crs.spatial_ref = sr.ExportToWkt()
 
+    kwargs['event_name'] = 'statvar_to_nc'
+    kwargs['event_description'] = 'creating netcdf file from output statistics variables file'
+    kwargs['progress_value'] = 0.00
+
+    '''
+    print kwargs['event_name']
+    print kwargs['event_description']
+    print kwargs['progress_value']
+    import time
+    time.sleep(.3)   
+    '''
+
+    if event_emitter:
+        event_emitter.emit('progress',**kwargs)
+
+    prg = 0.10
+    length = len(outputVariableNames)
+
     # Define other variables  
     for index in range(len(outputVariableNames)):
 
@@ -198,7 +217,37 @@ def statvar_to_netcdf(statvarFile, locationFile, outputFileName):
       
         columnValues = find_column_values(statvarFile, numberOfVariables, lastTimeStepValue, index)
         var[:] = columnValues
+
+	progress_value = prg/length * 100
+
+	kwargs['event_name'] = 'statvar_to_nc'
+        kwargs['event_description'] = 'creating netcdf file from output statistics variables file'
+        kwargs['progress_value'] = format(progress_value, '.2f')
+	
+        '''
+        print kwargs['event_name']
+        print kwargs['event_description']
+        print kwargs['progress_value']
+	time.sleep(.3)
+	'''
+
+	prg += 1
+        event_emitter.emit('progress', **kwargs)
     
+    kwargs['event_name'] = 'statvar_to_nc'
+    kwargs['event_description'] = 'creating netcdf file from output statistics variables file'
+    kwargs['progress_value'] = 100
+
+    '''
+    print kwargs['event_name']
+    print kwargs['event_description']
+    print kwargs['progress_value']
+    time.sleep(.3)   
+    '''
+
+    if event_emitter:
+        event_emitter.emit('progress',**kwargs)
+
     # Global attributes
     ncfile.title = 'Statistic Variables File'
     ncfile.bands = 1
@@ -207,18 +256,3 @@ def statvar_to_netcdf(statvarFile, locationFile, outputFileName):
 
     # Close the 'ncfile' object
     ncfile.close()
-
-
-if __name__ == "__main__":
-
-    numberOfArgs = len(sys.argv)
-    for i in range(numberOfArgs):
-
-        if sys.argv[i] == "-data":
-	    statvarFile = sys.argv[i+1]
-
-	elif sys.argv[i] == "-loc":
-	    locationFile = sys.argv[i+1]
-
-    statvar_to_netcdf(statvarFile, locationFile, 'statvar.nc')
-
