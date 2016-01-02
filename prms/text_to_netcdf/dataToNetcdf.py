@@ -359,6 +359,15 @@ def data_to_netcdf(fileInput, outputFileName, event_emitter=None, **kwargs):
 	prg += 1
         event_emitter.emit('progress', **kwargs)
     
+    # Global attributes
+    ncfile.title = 'Date File'
+    ncfile.nsteps = 1
+    ncfile.bands_name = 'nsteps'
+    ncfile.bands_desc = 'Variable information for Data File'
+     
+    # Close the 'ncfile' object
+    ncfile.close()
+       
     kwargs['event_name'] = 'data_to_nc'
     kwargs['event_description'] = 'creating netcdf file from input data file'
     kwargs['progress_value'] = 100
@@ -373,17 +382,6 @@ def data_to_netcdf(fileInput, outputFileName, event_emitter=None, **kwargs):
 
     if event_emitter:
         event_emitter.emit('progress',**kwargs)
-
-    # Global attributes
-    ncfile.title = 'Date File'
-    ncfile.nsteps = 1
-    ncfile.bands_name = 'nsteps'
-    ncfile.bands_desc = 'Variable information for Data File'
-     
-    # Close the 'ncfile' object
-    ncfile.close()
-       
-    
 
     
    

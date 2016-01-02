@@ -224,7 +224,7 @@ def statvar_to_netcdf(statvarFile, locationFile, outputFileName, event_emitter=N
         kwargs['event_description'] = 'creating netcdf file from output statistics variables file'
         kwargs['progress_value'] = format(progress_value, '.2f')
 	
-        '''
+	'''
         print kwargs['event_name']
         print kwargs['event_description']
         print kwargs['progress_value']
@@ -234,6 +234,15 @@ def statvar_to_netcdf(statvarFile, locationFile, outputFileName, event_emitter=N
 	prg += 1
         event_emitter.emit('progress', **kwargs)
     
+    # Global attributes
+    ncfile.title = 'Statistic Variables File'
+    ncfile.bands = 1
+    ncfile.bands_name = 'nsteps'
+    ncfile.bands_desc = 'Output variable information for ' + statvarFile
+
+    # Close the 'ncfile' object
+    ncfile.close()
+
     kwargs['event_name'] = 'statvar_to_nc'
     kwargs['event_description'] = 'creating netcdf file from output statistics variables file'
     kwargs['progress_value'] = 100
@@ -247,12 +256,3 @@ def statvar_to_netcdf(statvarFile, locationFile, outputFileName, event_emitter=N
 
     if event_emitter:
         event_emitter.emit('progress',**kwargs)
-
-    # Global attributes
-    ncfile.title = 'Statistic Variables File'
-    ncfile.bands = 1
-    ncfile.bands_name = 'nsteps'
-    ncfile.bands_desc = 'Output variable information for ' + statvarFile
-
-    # Close the 'ncfile' object
-    ncfile.close()

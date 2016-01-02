@@ -400,6 +400,20 @@ def parameter_to_netcdf(parameterFile, locationFile, numberOfHruCells, numberOfR
         fileHandle = open(parameterFile, 'r')
         values = find_other_parameter_values(fileHandle, otherParameterNames[index], otherParameterDimensionValues[index])
         var[:] = values
+   
+    # Global attributes
+    fileHandle = open(parameterFile, 'r')
+    ncfile.title = fileHandle.next().strip()
+    ncfile.version = fileHandle.next().strip()
+    ncfile.nsteps = 1
+    ncfile.bands_name = 'nsteps'
+    ncfile.bands_desc = 'Parameter information for ' + parameterFile
+    ncfile.number_of_hrus = numberOfHruCells
+    ncfile.number_of_rows = numberOfRows
+    ncfile.number_of_columns = numberOfColumns
+
+    # Close the 'ncfile' object
+    ncfile.close()
 
     kwargs['event_name'] = 'parameter_to_nc'
     kwargs['event_description'] = 'creating netcdf file from input parameter file'
@@ -414,19 +428,5 @@ def parameter_to_netcdf(parameterFile, locationFile, numberOfHruCells, numberOfR
 
     if event_emitter:
         event_emitter.emit('progress',**kwargs)
-    
-    # Global attributes
-    fileHandle = open(parameterFile, 'r')
-    ncfile.title = fileHandle.next().strip()
-    ncfile.version = fileHandle.next().strip()
-    ncfile.nsteps = 1
-    ncfile.bands_name = 'nsteps'
-    ncfile.bands_desc = 'Parameter information for ' + parameterFile
-    ncfile.number_of_hrus = numberOfHruCells
-    ncfile.number_of_rows = numberOfRows
-    ncfile.number_of_columns = numberOfColumns
-
-    # Close the 'ncfile' object
-    ncfile.close()
     
 
