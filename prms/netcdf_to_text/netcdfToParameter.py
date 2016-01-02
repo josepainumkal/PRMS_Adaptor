@@ -1,5 +1,6 @@
 from netCDF4 import Dataset
 import sys
+import time
 
 def find_dimensions(fileHandle):
 
@@ -119,13 +120,16 @@ def find_size_of_latitude_variable(fileHandle):
 
 def write_variable_data_to_file(temporaryFileHandle, fileHandle, variableNames, \
     variableDimensions, countOfDimensions, sizeOfLatitudeVariable, \
-    numberOfParameterValues, variableTypes, numberOfHruCells):
+    numberOfParameterValues, variableTypes, numberOfHruCells, event_emitter=None, **kwargs):
 
+    prg = 0.10
+    length = len(variableNames)
+    
     temporaryFileHandle.write('** Parameters **\n')
     
     for index in range(len(variableNames)):
 
-	temporaryFileHandle.write('####\n'+variableNames[index]+'\n'+str(countOfDimensions[index])+'\n')
+        temporaryFileHandle.write('####\n'+variableNames[index]+'\n'+str(countOfDimensions[index])+'\n')
 
 	if countOfDimensions[index] == 1:
 	    temporaryFileHandle.write(variableDimensions[index]+'\n')
@@ -157,9 +161,27 @@ def write_variable_data_to_file(temporaryFileHandle, fileHandle, variableNames, 
 	   	    for i in range(sizeOfLatitudeVariable):
 	        	for j in range(len(values[i])):
 			    temporaryFileHandle.write(str(values[i][j])+'\n')
-	
 
-def netcdf_to_parameter(inputFileName, outputFileName):
+	progress_value = prg/length * 100
+        
+        kwargs['event_name'] = 'nc_to_parameter'
+	kwargs['event_description'] = 'creating input parameter file from output netcdf file'
+        kwargs['progress_value'] = format(progress_value, '.2f')
+
+	'''
+	print kwargs['event_name']
+        print kwargs['event_description']
+        print kwargs['progress_value']
+        time.sleep(.1)    
+	'''
+
+        prg += 1
+        event_emitter.emit('progress', **kwargs)
+                
+
+def netcdf_to_parameter(inputFileName, outputFileName, event_emitter=None, **kwargs):
+
+    start = time.time()
 
     fileHandle = Dataset(inputFileName, 'r')
     temporaryFileHandle = open(outputFileName, 'w')
@@ -201,10 +223,40 @@ def netcdf_to_parameter(inputFileName, outputFileName):
     countOfDimensions = find_count_of_dimensions(variableDimensions)
 
     sizeOfLatitudeVariable = find_size_of_latitude_variable(fileHandle)
+    
+    kwargs['event_name'] = 'nc_to_parameter'
+    kwargs['event_description'] = 'creating input parameter file from netcdf file'
+    kwargs['progress_value'] = 0.00
+
+    '''
+    print kwargs['event_name']
+    print kwargs['event_description']
+    print kwargs['progress_value']
+    time.sleep(.1)
+    '''
+
+    if event_emitter:
+        event_emitter.emit('progress',**kwargs)
+    
     write_variable_data_to_file(temporaryFileHandle, fileHandle, variableNames, \
         variableDimensions, countOfDimensions, sizeOfLatitudeVariable, \
-        numberOfParameterValues, variableTypes, numberOfHruCells)
-    			
+        numberOfParameterValues, variableTypes, numberOfHruCells, event_emitter=event_emitter)
+
+    kwargs['event_name'] = 'nc_to_parameter'
+    kwargs['event_description'] = 'creating input parameter file from output netcdf file'
+    kwargs['progress_value'] = 100
+
+    '''
+    print kwargs['event_name']
+    print kwargs['event_description']
+    print kwargs['progress_value']
+    time.sleep(.1)
+    '''
+    
+    if event_emitter:
+        event_emitter.emit('progress',**kwargs)
+    	
+    
 if __name__ == "__main__":
 
     netcdf_to_parameter(sys.argv[1], 'LC.param')

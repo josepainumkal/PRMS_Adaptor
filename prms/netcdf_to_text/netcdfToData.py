@@ -190,8 +190,10 @@ def write_variable_data_to_file(fileHandle, temporaryFileHandle, date,event_emit
     startDate = datetime.date(startYear, startMonth, startDay)
     endDate = datetime.date(endYear, endMonth, endDay)
     prg = 0.10
+    
     for dt in rrule(DAILY, dtstart=startDate, until=endDate):
-    	temporaryFileHandle.write(dt.strftime("%Y %m %d 0 0 0")+" ")
+	temporaryFileHandle.write(dt.strftime("%Y %m %d 0 0 0")+" ")
+	
 	for variable in fileHandle.variables:
             if variable != 'time':
 		temporaryFileHandle.write(str(fileHandle.variables[variable][timestamp])+" ")
@@ -200,22 +202,22 @@ def write_variable_data_to_file(fileHandle, temporaryFileHandle, date,event_emit
         
 	if progress_value <= 99.99:
             kwargs['event_name'] = 'nc_to_data'
-	    kwargs['event_description'] = 'Some desc'
+	    kwargs['event_description'] = 'creating input data file from output netcdf file'
             kwargs['progress_value'] = format(progress_value, '.2f')
 
 	    '''
-            print kwargs['event_name']
+	    print kwargs['event_name']
             print kwargs['event_description']
             print kwargs['progress_value']
             time.sleep(.1)    
 	    '''
-            
-	    prg += 1
+
+            prg += 1
             event_emitter.emit('progress',**kwargs)
         timestamp = timestamp + 1
 
 
-def netcdf_to_data(inputFileName, outputFileName,event_emitter=None, **kwargs):
+def netcdf_to_data(inputFileName, outputFileName, event_emitter=None, **kwargs):
 
     start = time.time()
     
@@ -253,7 +255,7 @@ def netcdf_to_data(inputFileName, outputFileName,event_emitter=None, **kwargs):
     kwargs['event_name'] = 'nc_to_data'
     kwargs['event_description'] = 'creating input data file from netcdf file'
     kwargs['progress_value'] = 0.00
-    
+
     '''
     print kwargs['event_name']
     print kwargs['event_description']

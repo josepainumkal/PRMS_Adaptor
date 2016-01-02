@@ -3,10 +3,10 @@ from pyee import EventEmitter
 
 ee = EventEmitter()
 
+'''
 from prms.text_to_netcdf import dataToNetcdf
 dataToNetcdf.data_to_netcdf(os.getcwd()+'/prms/input_files/LC.data', os.getcwd()+'/prms/outputs/data.nc')
 
-'''
 from prms.text_to_netcdf import parameterToNetcdf
 parameterToNetcdf.parameter_to_netcdf(os.getcwd()+'/prms/input_files/LC.param', os.getcwd()+'/prms/XY.DAT', 4704, 49, 96, os.getcwd()+'/prms/outputs/parameter.nc')
 
@@ -29,7 +29,7 @@ statvarToNetcdf.statvar_to_netcdf(os.getcwd()+'/prms/output_files/statvar.dat', 
 from prms.netcdf_to_text import netcdfToData
 netcdfToData.netcdf_to_data(os.getcwd()+'/prms/outputs/data.nc', os.getcwd()+'/prms/input_files/LC.data', event_emitter=ee)
 
-#from prms.netcdf_to_text import netcdfToParameter
-#netcdfToParameter.netcdf_to_parameter(os.getcwd()+'/prms/outputs/parameter.nc', os.getcwd()+'/prms/input_files/LC.param')
+from prms.netcdf_to_text import netcdfToParameter
+netcdfToParameter.netcdf_to_parameter(os.getcwd()+'/prms/outputs/parameter.nc', os.getcwd()+'/prms/input_files/LC.param', event_emitter=ee)
 
 
