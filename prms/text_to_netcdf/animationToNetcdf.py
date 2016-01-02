@@ -3,6 +3,7 @@ import netCDF4
 import osr   
 import sys
 import os
+import time
 from netCDF4 import Dataset
 
 def find_location_values(fileHandle, numberOfHruCells, position):
@@ -139,7 +140,22 @@ def extract_lat_and_lon_information(parameterFile):
     return latitudeValues, longitudeValues
 
 
-def animation_to_netcdf(animationFile, parameterFile, outputFileName):
+def animation_to_netcdf(animationFile, parameterFile, outputFileName, event_emitter=None, **kwargs):
+
+    kwargs['event_name'] = 'animation_to_nc'
+    kwargs['event_description'] = 'creating netcdf file from output animation file'
+    kwargs['progress_value'] = 0.00
+
+    '''
+    print kwargs['event_name']
+    print kwargs['event_description']
+    print kwargs['progress_value']
+    import time
+    time.sleep(.1)   
+    '''
+
+    if event_emitter:
+        event_emitter.emit('progress',**kwargs)
 
     values = extract_row_column_hru_information(parameterFile)    
     numberOfHruCells = values[0]
@@ -202,6 +218,25 @@ def animation_to_netcdf(animationFile, parameterFile, outputFileName):
     crs = ncfile.createVariable('crs', 'S1',)
     crs.spatial_ref = sr.ExportToWkt()
 
+    kwargs['event_name'] = 'animation_to_nc'
+    kwargs['event_description'] = 'creating netcdf file from output animation file'
+    kwargs['progress_value'] = 0.05
+
+    '''
+    print kwargs['event_name']
+    print kwargs['event_description']
+    print kwargs['progress_value']
+    import time
+    time.sleep(.1)   
+    '''
+
+    if event_emitter:
+        event_emitter.emit('progress',**kwargs)
+
+
+    prg = 0.10
+    length = len(outputVariableNames)
+
     for index in range(len(outputVariableNames)):
 
 	metadata = add_metadata(outputVariableNames[index])
@@ -219,6 +254,23 @@ def animation_to_netcdf(animationFile, parameterFile, outputFileName):
         columnValues = find_column_values(fileHandle, totalNumberOfDataValues, numberOfMetadataLines, index)		
 	var[:] = columnValues
 
+	progress_value = prg/length * 100
+
+	kwargs['event_name'] = 'animation_to_nc'
+        kwargs['event_description'] = 'creating netcdf file from output animation file'
+        kwargs['progress_value'] = format(progress_value, '.2f')
+	
+	'''
+        print kwargs['event_name']
+        print kwargs['event_description']
+        print kwargs['progress_value']
+	import time
+	time.sleep(.1)
+	'''
+
+	prg += 1
+        event_emitter.emit('progress', **kwargs)
+
     # Global attributes
     ncfile.title = 'PRMS Animation File'
     ncfile.nsteps = 1
@@ -228,17 +280,23 @@ def animation_to_netcdf(animationFile, parameterFile, outputFileName):
     # Close the 'ncfile' object
     ncfile.close()
     
+    kwargs['event_name'] = 'animation_to_nc'
+    kwargs['event_description'] = 'creating netcdf file from output animation file'
+    kwargs['progress_value'] = 100
 
-if __name__ == "__main__":
+    '''
+    print kwargs['event_name']
+    print kwargs['event_description']
+    print kwargs['progress_value']
+    import time
+    time.sleep(.1)   
+    '''
 
-    numberOfArgs = len(sys.argv)
+    if event_emitter:
+        event_emitter.emit('progress',**kwargs)
     
-    for i in range(numberOfArgs):
-        if sys.argv[i] == "-data":
-	    animationFile = sys.argv[i+1]
 
-    animation_to_netcdf(animationFile, 'parameter.nc', 'animation.nc')
-  
+
 
 
 
