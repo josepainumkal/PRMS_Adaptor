@@ -233,8 +233,10 @@ def find_variable_type(parameterType):
     return value
 
 
-def parameter_to_netcdf(parameterFile, locationFile, numberOfHruCells, numberOfRows, numberOfColumns, outputFileName):
+def parameter_to_netcdf(parameterFile, locationFile, numberOfHruCells, numberOfRows, numberOfColumns, outputFileName, event_emitter=None, **kwargs):
    
+    start = time.time()
+
     fileHandle = open(parameterFile, 'r')
     dimensions = find_dimensions(fileHandle)
     dimensionNames = dimensions[0]
@@ -307,6 +309,21 @@ def parameter_to_netcdf(parameterFile, locationFile, numberOfHruCells, numberOfR
     crs = ncfile.createVariable('crs', 'S1',)
     crs.spatial_ref = sr.ExportToWkt()
     			   
+    kwargs['event_name'] = 'parameter_to_nc'
+    kwargs['event_description'] = 'creating netcdf file from input parameter file'
+    kwargs['progress_value'] = 0.00
+
+    print kwargs['event_name']
+    print kwargs['event_description']
+    print kwargs['progress_value']
+    time.sleep(.1)   
+
+    if event_emitter:
+        event_emitter.emit('progress',**kwargs)
+
+    prg = 0.10
+    length = len(spaceRelatedParameterNames)
+
     for index in range(len(spaceRelatedParameterNames)):
         value = find_variable_type(spaceRelatedParameterTypes[index])
 	metadata = add_metadata(spaceRelatedParameterNames[index])
@@ -327,6 +344,21 @@ def parameter_to_netcdf(parameterFile, locationFile, numberOfHruCells, numberOfR
         values = find_space_dependent_parameter_values(fileHandle, spaceRelatedParameterNames[index], numberOfHruCells)		
 	var[:] = values
     
+        progress_value = prg/length * 100
+
+	kwargs['event_name'] = 'parameter_to_nc'
+        kwargs['event_description'] = 'creating netcdf file from input parameter file'
+        kwargs['progress_value'] = format(progress_value, '.2f')
+	
+        print kwargs['event_name']
+        print kwargs['event_description']
+        print kwargs['progress_value']
+	time.sleep(.1)
+	
+	prg += 1
+        event_emitter.emit('progress', **kwargs)
+
+
     for index in range(len(spaceAndTimeRelatedParameterNames)):
 	value = find_variable_type(spaceAndTimeRelatedParameterTypes[index])
         metadata = add_metadata(spaceAndTimeRelatedParameterNames[index])
@@ -347,6 +379,7 @@ def parameter_to_netcdf(parameterFile, locationFile, numberOfHruCells, numberOfR
     	    fileHandle = open(fileLocation, 'r')
             values = find_space_and_time_dependent_parameter_values(fileHandle, spaceAndTimeRelatedParameterNames[index], numberOfHruCells, monthIndex)		
 	    var[:] = values
+
     
     for index in range(len(otherParameterNames)):
         value = find_variable_type(otherParameterTypes[index])
@@ -365,6 +398,18 @@ def parameter_to_netcdf(parameterFile, locationFile, numberOfHruCells, numberOfR
         fileHandle = open(parameterFile, 'r')
         values = find_other_parameter_values(fileHandle, otherParameterNames[index], otherParameterDimensionValues[index])
         var[:] = values
+
+    kwargs['event_name'] = 'parameter_to_nc'
+    kwargs['event_description'] = 'creating netcdf file from input parameter file'
+    kwargs['progress_value'] = 100
+
+    print kwargs['event_name']
+    print kwargs['event_description']
+    print kwargs['progress_value']
+    time.sleep(.1)   
+
+    if event_emitter:
+        event_emitter.emit('progress',**kwargs)
     
     # Global attributes
     fileHandle = open(parameterFile, 'r')
@@ -374,32 +419,10 @@ def parameter_to_netcdf(parameterFile, locationFile, numberOfHruCells, numberOfR
     ncfile.bands_name = 'nsteps'
     ncfile.bands_desc = 'Parameter information for ' + parameterFile
     ncfile.number_of_hrus = numberOfHruCells
+    ncfile.number_of_rows = numberOfRows
+    ncfile.number_of_columns = numberOfColumns
 
     # Close the 'ncfile' object
     ncfile.close()
-
-if __name__ == "__main__":
- 
-    numberOfArgs = len(sys.argv)
-    for i in range(numberOfArgs):
-
-        if sys.argv[i] == "-data":
-	    parameterFile = sys.argv[i+1]
-
-	elif sys.argv[i] == "-loc":
-	    locationFile = sys.argv[i+1]
-
-        elif sys.argv[i] ==  "-nhru":
-	    numberOfHruCells = int(sys.argv[i+1])
-
-        elif sys.argv[i] ==  "-nrows":
-	    numberOfRows = int(sys.argv[i+1])
-
-	elif sys.argv[i] ==  "-ncols":
-	    numberOfColumns = int(sys.argv[i+1])
-       
-    parameter_to_netcdf(parameterFile, locationFile, numberOfHruCells, numberOfRows, numberOfColumns, 'parameter.nc')
-    print(time.time() - start_time)
-
     
 

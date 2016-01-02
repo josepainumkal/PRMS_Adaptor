@@ -233,9 +233,6 @@ def add_metadata(var, dataValues, position, headerValues, variableName, variable
            
 def data_to_netcdf(fileInput, outputFileName, event_emitter=None, **kwargs):
    
-    import time
-    start = time.time()
-    
     totalNumberOfVariables = 0
     totalNumberofLinesOfData = []
     sumOfVariableLengths = []
