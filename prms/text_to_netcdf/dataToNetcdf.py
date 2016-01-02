@@ -1,10 +1,6 @@
-#data to netcdf converter
-#originally from Lisa Palathingal at https://github.com/lisapalathingal/PRMS_Adaptor
-#modified for use in this coding structure
-
 import netCDF4
-import sys
 import os
+import time
 
 def find_number_of_days(fileHandle):
 
@@ -235,8 +231,11 @@ def add_metadata(var, dataValues, position, headerValues, variableName, variable
     if variableName != 'precip' and variableName != 'runoff':
         var.layer_units = variableUnit
            
-def data_to_netcdf(fileInput, outputFileName):
+def data_to_netcdf(fileInput, outputFileName, event_emitter=None, **kwargs):
    
+    import time
+    start = time.time()
+    
     totalNumberOfVariables = 0
     totalNumberofLinesOfData = []
     sumOfVariableLengths = []
@@ -290,9 +289,28 @@ def data_to_netcdf(fileInput, outputFileName):
     time.units = 'days since '+year+'-'+month+'-'+day+' '+hour+':'+minute+':'+second
     time[:] = totalNumberofLinesOfData
 
+    kwargs['event_name'] = 'data_to_nc'
+    kwargs['event_description'] = 'creating netcdf file from input data file'
+    kwargs['progress_value'] = 0.00
+
+    '''
+    print kwargs['event_name']
+    print kwargs['event_description']
+    print kwargs['progress_value']
+    import time
+    time.sleep(.1)
+    '''    
+
+    if event_emitter:
+        event_emitter.emit('progress',**kwargs)
+    
+    prg = 0.10
+    length = len(variableNames)
+
     # Define other variables
     for i in range(len(variableNames)):
-        if variableLengths[i] > 1:
+
+	if variableLengths[i] > 1:
 
 	    metadata = get_metadata(variableNames[i])
 	    variableName = metadata[0]
@@ -327,6 +345,37 @@ def data_to_netcdf(fileInput, outputFileName):
     	    columnValues = find_column_values(fileHandle, numberOfDays, position)
             var[:] = columnValues
 
+        progress_value = prg/length * 100
+
+	kwargs['event_name'] = 'data_to_nc'
+        kwargs['event_description'] = 'creating netcdf file from input data file'
+        kwargs['progress_value'] = format(progress_value, '.2f')
+	
+        '''
+	print kwargs['event_name']
+        print kwargs['event_description']
+        print kwargs['progress_value']
+	import time
+        time.sleep(.1)
+	'''
+
+	prg += 1
+        event_emitter.emit('progress', **kwargs)
+    
+    kwargs['event_name'] = 'data_to_nc'
+    kwargs['event_description'] = 'creating netcdf file from input data file'
+    kwargs['progress_value'] = 100
+
+    '''
+    print kwargs['event_name']
+    print kwargs['event_description']
+    print kwargs['progress_value']
+    import time
+    time.sleep(.1)
+    '''
+
+    if event_emitter:
+        event_emitter.emit('progress',**kwargs)
 
     # Global attributes
     ncfile.title = 'Date File'
@@ -336,10 +385,7 @@ def data_to_netcdf(fileInput, outputFileName):
      
     # Close the 'ncfile' object
     ncfile.close()
-    
-if __name__ == "__main__":
        
-    data_to_netcdf(sys.argv[1], 'data.nc')
     
 
     
