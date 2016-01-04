@@ -194,7 +194,8 @@ def prmsout_to_netcdf(fileInput, outputFileName, event_emitter=None, **kwargs):
 	'''
 
 	prg += 1
-        event_emitter.emit('progress', **kwargs)
+        if event_emitter:
+	        event_emitter.emit('progress',**kwargs)
 
     # Global attributes
     ncfile.title = 'prms.out file'

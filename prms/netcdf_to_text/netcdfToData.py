@@ -176,7 +176,7 @@ def find_start_and_end_dates(fileHandle):
     return startYear, startMonth, startDay, endYear, endMonth, endDay
 
 
-def write_variable_data_to_file(fileHandle, temporaryFileHandle, date,event_emitter=None,**kwargs):
+def write_variable_data_to_file(fileHandle, temporaryFileHandle, date, event_emitter=None, **kwargs):
 
     startYear = date[0]
     startMonth = date[1]
@@ -213,7 +213,8 @@ def write_variable_data_to_file(fileHandle, temporaryFileHandle, date,event_emit
 	    '''
 
             prg += 1
-            event_emitter.emit('progress',**kwargs)
+	    if event_emitter:
+	        event_emitter.emit('progress',**kwargs)
         timestamp = timestamp + 1
 
 
@@ -251,7 +252,6 @@ def netcdf_to_data(inputFileName, outputFileName, event_emitter=None, **kwargs):
     temporaryFileHandle.write('####################################################################\n')
     date = find_start_and_end_dates(fileHandle)
 
-    time_1 = time.time()
     kwargs['event_name'] = 'nc_to_data'
     kwargs['event_description'] = 'creating input data file from netcdf file'
     kwargs['progress_value'] = 0.00
@@ -266,9 +266,8 @@ def netcdf_to_data(inputFileName, outputFileName, event_emitter=None, **kwargs):
     if event_emitter:
         event_emitter.emit('progress',**kwargs)
 
-    write_variable_data_to_file(fileHandle, temporaryFileHandle, date,event_emitter=event_emitter)
+    write_variable_data_to_file(fileHandle, temporaryFileHandle, date, event_emitter=event_emitter)
 
-    time_2 = time.time()
     kwargs['event_name'] = 'nc_to_data'
     kwargs['event_description'] = 'creating input data file from output netcdf file'
     kwargs['progress_value'] = 100

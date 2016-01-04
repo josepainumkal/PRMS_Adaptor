@@ -72,6 +72,7 @@ def find_resolution(locationFile, outputVariableArrayIndices):
     
     """
 
+    print outputVariableArrayIndices
     latitudeValues = []
     longitudeValues = []
    
@@ -79,6 +80,7 @@ def find_resolution(locationFile, outputVariableArrayIndices):
 
     for i in outputVariableArrayIndices:
 	values = linecache.getline(locationFile, int(i)).split()
+        print values
 	longitudeValues.append(float(values[1]))
 	latitudeValues.append(float(values[2]))
 
@@ -232,7 +234,8 @@ def statvar_to_netcdf(statvarFile, locationFile, outputFileName, event_emitter=N
 	'''
 
 	prg += 1
-        event_emitter.emit('progress', **kwargs)
+        if event_emitter:
+            event_emitter.emit('progress',**kwargs)
     
     # Global attributes
     ncfile.title = 'Statistic Variables File'

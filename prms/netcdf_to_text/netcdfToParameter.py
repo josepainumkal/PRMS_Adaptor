@@ -176,7 +176,8 @@ def write_variable_data_to_file(temporaryFileHandle, fileHandle, variableNames, 
 	'''
 
         prg += 1
-        event_emitter.emit('progress', **kwargs)
+        if event_emitter:
+	    event_emitter.emit('progress',**kwargs)
                 
 
 def netcdf_to_parameter(inputFileName, outputFileName, event_emitter=None, **kwargs):
@@ -257,9 +258,6 @@ def netcdf_to_parameter(inputFileName, outputFileName, event_emitter=None, **kwa
         event_emitter.emit('progress',**kwargs)
     	
     
-if __name__ == "__main__":
-
-    netcdf_to_parameter(sys.argv[1], 'LC.param')
    
 
     

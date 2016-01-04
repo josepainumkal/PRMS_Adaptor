@@ -358,7 +358,8 @@ def parameter_to_netcdf(parameterFile, locationFile, numberOfHruCells, numberOfR
 	'''
 
 	prg += 1
-        event_emitter.emit('progress', **kwargs)
+        if event_emitter:
+            event_emitter.emit('progress',**kwargs)
 
 
     for index in range(len(spaceAndTimeRelatedParameterNames)):

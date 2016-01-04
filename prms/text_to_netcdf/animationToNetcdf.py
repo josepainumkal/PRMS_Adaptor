@@ -269,7 +269,8 @@ def animation_to_netcdf(animationFile, parameterFile, outputFileName, event_emit
 	'''
 
 	prg += 1
-        event_emitter.emit('progress', **kwargs)
+        if event_emitter:
+	    event_emitter.emit('progress',**kwargs)
 
     # Global attributes
     ncfile.title = 'PRMS Animation File'
