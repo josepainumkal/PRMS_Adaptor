@@ -1,9 +1,6 @@
-import linecache
-import netCDF4    
-import osr  
+import netCDF4
+import os      
 import sys
-import os
-import time
 
 def find_output_variables(fileHandle, numberOfVariables):
     
@@ -58,35 +55,6 @@ def find_column_values(statvarFile, numberOfVariables, numberOfDataValues, posit
    
     return values
 
-
-def find_resolution(locationFile, outputVariableArrayIndices):
-
-    """
-    
-    Returns the values of variables in the file. 
-
-    Args:
-        numberOfDays (int): is the total number of values for the variable
-	position (int): is the column position from where the values can be 
-        retrieved
-    
-    """
-
-    print outputVariableArrayIndices
-    latitudeValues = []
-    longitudeValues = []
-   
-    fileHandle = open(locationFile, 'r')
-
-    for i in outputVariableArrayIndices:
-	values = linecache.getline(locationFile, int(i)).split()
-        print values
-	longitudeValues.append(float(values[1]))
-	latitudeValues.append(float(values[2]))
-
-    return latitudeValues, longitudeValues
-
-
 def find_metadata(outputVariableName):
 
     projectRoot = os.path.dirname(os.path.dirname(__file__))
@@ -119,27 +87,26 @@ def find_metadata(outputVariableName):
           
     return variableName, variableDescription, variableUnit, variableType
 
-
-def statvar_to_netcdf(statvarFile, locationFile, outputFileName, event_emitter=None, **kwargs):
+def statvar_to_netcdf(statvarFile, outputFileName, event_emitter=None, **kwargs):
    
     indexOfDataLine = []
 
     fileHandle = open(statvarFile, 'r')
     lastLine = fileHandle.readlines()[-1].split()
     lastTimeStepValue = int(lastLine[0])
-    
+
     for index in range(1, lastTimeStepValue+1):
         indexOfDataLine.append(index)
     
     # Finding the number of variable values
     fileHandle = open(statvarFile, 'r')
     numberOfVariables = int(fileHandle.next().strip())
-           
+       
     # Finding the names and array indices of output variables
     outputVariables = find_output_variables(fileHandle, numberOfVariables)
     outputVariableNames = outputVariables[0]
     outputVariableArrayIndices = outputVariables[1]
-
+   
     # Finding the first date
     firstDate = fileHandle.next().strip().split()[1:7]
     year = firstDate[0]
@@ -149,49 +116,31 @@ def statvar_to_netcdf(statvarFile, locationFile, outputFileName, event_emitter=N
     minute = firstDate[4]
     second = firstDate[5]
 
-    locationValues = find_resolution(locationFile, outputVariableArrayIndices)
-    latitudeValues = locationValues[0]
-    longitudeValues = locationValues[1]
-            
     # Initialize new dataset
     ncfile = netCDF4.Dataset(outputFileName, mode='w')
 
     # Initialize dimensions
     time = ncfile.createDimension('time', lastTimeStepValue)  
-   
+
     # Define time variable
     time = ncfile.createVariable('time', 'i4', ('time',))
     time.long_name = 'time'  
     time.units = 'days since '+year+'-'+month+'-'+day+' '+hour+':'+minute+':'+second
     time[:] = indexOfDataLine
-   
-    sr = osr.SpatialReference()
-    sr.ImportFromEPSG(4326)
-    crs = ncfile.createVariable('crs', 'S1',)
-    crs.spatial_ref = sr.ExportToWkt()
 
     kwargs['event_name'] = 'statvar_to_nc'
     kwargs['event_description'] = 'creating netcdf file from output statistics variables file'
     kwargs['progress_value'] = 0.00
-
-    '''
-    print kwargs['event_name']
-    print kwargs['event_description']
-    print kwargs['progress_value']
-    import time
-    time.sleep(.3)   
-    '''
-
+    
     if event_emitter:
         event_emitter.emit('progress',**kwargs)
 
     prg = 0.10
     length = len(outputVariableNames)
-
+    
     # Define other variables  
     for index in range(len(outputVariableNames)):
-
-        metadata = find_metadata(outputVariableNames[index])
+	metadata = find_metadata(outputVariableNames[index])
 	variableName = metadata[0]
 	variableDescription = metadata[1]
 	variableUnit = metadata[2]
@@ -203,20 +152,12 @@ def statvar_to_netcdf(statvarFile, locationFile, outputFileName, event_emitter=N
 	    value = 'f4'
 	elif variableType == 'integer':
 	    value = 'i4'
-	
-        ncfile.createDimension('lat_'+str(index), 1)
-        ncfile.createDimension('lon_'+str(index), 1)
-	
-	var = ncfile.createVariable(outputVariableNames[index]+'_'+outputVariableArrayIndices[index], value, ('time', 'lat_'+str(index), 'lon_'+str(index)))
+
+        var = ncfile.createVariable(outputVariableNames[index]+'_'+outputVariableArrayIndices[index], value, ('time',))
         var.layer_name = variableName
 	var.hru = outputVariableArrayIndices[index]
 	var.layer_desc = variableDescription
 	var.layer_units = variableUnit
-
-	var.latitude = latitudeValues[index]
-	var.longitude = longitudeValues[index];
-	var.grid_mapping = "crs" 
-      
         columnValues = find_column_values(statvarFile, numberOfVariables, lastTimeStepValue, index)
         var[:] = columnValues
 
@@ -225,17 +166,11 @@ def statvar_to_netcdf(statvarFile, locationFile, outputFileName, event_emitter=N
 	kwargs['event_name'] = 'statvar_to_nc'
         kwargs['event_description'] = 'creating netcdf file from output statistics variables file'
         kwargs['progress_value'] = format(progress_value, '.2f')
-	
-	'''
-        print kwargs['event_name']
-        print kwargs['event_description']
-        print kwargs['progress_value']
-	time.sleep(.3)
-	'''
 
 	prg += 1
         if event_emitter:
             event_emitter.emit('progress',**kwargs)
+	
     
     # Global attributes
     ncfile.title = 'Statistic Variables File'
@@ -249,13 +184,6 @@ def statvar_to_netcdf(statvarFile, locationFile, outputFileName, event_emitter=N
     kwargs['event_name'] = 'statvar_to_nc'
     kwargs['event_description'] = 'creating netcdf file from output statistics variables file'
     kwargs['progress_value'] = 100
-
-    '''
-    print kwargs['event_name']
-    print kwargs['event_description']
-    print kwargs['progress_value']
-    time.sleep(.3)   
-    '''
 
     if event_emitter:
         event_emitter.emit('progress',**kwargs)
