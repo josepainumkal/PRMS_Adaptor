@@ -1,3 +1,4 @@
 *.swp
 *.pyc
 values.param
+prms/outputs
