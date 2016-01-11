@@ -254,7 +254,8 @@ def animation_to_netcdf(animationFile, parameterFile, outputFileName, event_emit
         columnValues = find_column_values(fileHandle, totalNumberOfDataValues, numberOfMetadataLines, index)		
 	var[:] = columnValues
 
-	progress_value = prg/length * 100
+	if prg%5 == 0:	
+		progress_value = prg/length * 100
 
 	kwargs['event_name'] = 'animation_to_nc'
         kwargs['event_description'] = 'creating netcdf file from output animation file'

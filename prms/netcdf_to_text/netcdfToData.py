@@ -198,7 +198,9 @@ def write_variable_data_to_file(fileHandle, temporaryFileHandle, date, event_emi
             if variable != 'time':
 		temporaryFileHandle.write(str(fileHandle.variables[variable][timestamp])+" ")
 	temporaryFileHandle.write("\n")
-        progress_value = prg/(endDate-startDate).days * 100
+
+	if prg%5 == 0:	
+		progress_value = prg/(endDate-startDate).days * 100        
         
 	if progress_value <= 99.99:
             kwargs['event_name'] = 'nc_to_data'

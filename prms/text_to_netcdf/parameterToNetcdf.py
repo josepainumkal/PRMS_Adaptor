@@ -344,7 +344,8 @@ def parameter_to_netcdf(parameterFile, locationFile, numberOfHruCells, numberOfR
         values = find_space_dependent_parameter_values(fileHandle, spaceRelatedParameterNames[index], numberOfHruCells)		
 	var[:] = values
     
-        progress_value = prg/length * 100
+        if prg%5 == 0:	
+            progress_value = prg/length * 100
 
 	kwargs['event_name'] = 'parameter_to_nc'
         kwargs['event_description'] = 'creating netcdf file from input parameter file'

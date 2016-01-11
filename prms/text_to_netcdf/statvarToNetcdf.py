@@ -161,7 +161,8 @@ def statvar_to_netcdf(statvarFile, outputFileName, event_emitter=None, **kwargs)
         columnValues = find_column_values(statvarFile, numberOfVariables, lastTimeStepValue, index)
         var[:] = columnValues
 
-	progress_value = prg/length * 100
+	if prg%5 == 0:	
+	    progress_value = prg/length * 100
 
 	kwargs['event_name'] = 'statvar_to_nc'
         kwargs['event_description'] = 'creating netcdf file from output statistics variables file'

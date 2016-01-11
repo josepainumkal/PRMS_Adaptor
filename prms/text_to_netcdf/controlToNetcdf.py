@@ -2,6 +2,7 @@ import netCDF4
 import numpy
 import sys
 import os
+import time
 
 def _get_datatype(value):
 
@@ -49,7 +50,7 @@ def _store_parameter_values_in_a_list(fileHandle, valueType, nameOfControlParame
     elif valueType == 4:
         nameOfControlParameters.append(fileHandle.next().strip())
     
-def control_to_netcdf(controlFile, outputFileName):
+def control_to_netcdf(controlFile, outputFileName, **kwargs):
 
     """
     Converts the input file into netCDF format.   
@@ -57,6 +58,8 @@ def control_to_netcdf(controlFile, outputFileName):
     Args:
         fileHandle: is the input file
     """
+
+    start = time.time()
 
     index = 0
     controlParameterNames = []
@@ -108,7 +111,3 @@ def control_to_netcdf(controlFile, outputFileName):
        
     # Close the 'ncfile' object
     ncfile.close()
-
-if __name__ == "__main__":
-
-    control_to_netcdf(sys.argv[1], 'control.nc')

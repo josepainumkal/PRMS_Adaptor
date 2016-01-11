@@ -162,7 +162,9 @@ def write_variable_data_to_file(temporaryFileHandle, fileHandle, variableNames, 
 	        	for j in range(len(values[i])):
 			    temporaryFileHandle.write(str(values[i][j])+'\n')
 
-	progress_value = prg/length * 100
+		
+	if prg%5 == 0:	
+	    progress_value = prg/length * 100
         
         kwargs['event_name'] = 'nc_to_parameter'
 	kwargs['event_description'] = 'creating input parameter file from output netcdf file'

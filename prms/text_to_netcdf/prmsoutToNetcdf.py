@@ -180,7 +180,8 @@ def prmsout_to_netcdf(fileInput, outputFileName, event_emitter=None, **kwargs):
         values = get_values(variableValues, index+1)
         var[:] = values
 
-	progress_value = prg/length * 100
+	if prg%5 == 0:	
+	    progress_value = prg/length * 100
 
 	kwargs['event_name'] = 'prmsout_to_nc'
         kwargs['event_description'] = 'creating netcdf file from output water budget file'
