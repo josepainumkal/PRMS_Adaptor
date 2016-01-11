@@ -180,23 +180,15 @@ def prmsout_to_netcdf(fileInput, outputFileName, event_emitter=None, **kwargs):
         values = get_values(variableValues, index+1)
         var[:] = values
 
-	if prg%5 == 0:	
+	if prg % 5 == 0:	
 	    progress_value = prg/length * 100
-
-	kwargs['event_name'] = 'prmsout_to_nc'
-        kwargs['event_description'] = 'creating netcdf file from output water budget file'
-        kwargs['progress_value'] = format(progress_value, '.2f')
-	
-	'''
-        print kwargs['event_name']
-        print kwargs['event_description']
-        print kwargs['progress_value']
-	time.sleep(.3)
-	'''
-
-	prg += 1
-        if event_emitter:
+       	    kwargs['event_name'] = 'prmsout_to_nc'
+            kwargs['event_description'] = 'creating netcdf file from output water budget file'
+            kwargs['progress_value'] = format(progress_value, '.2f')
+	    if event_emitter:
 	        event_emitter.emit('progress',**kwargs)
+	prg += 1
+       
 
     # Global attributes
     ncfile.title = 'prms.out file'
@@ -216,13 +208,5 @@ def prmsout_to_netcdf(fileInput, outputFileName, event_emitter=None, **kwargs):
     kwargs['event_name'] = 'prmsout_to_nc'
     kwargs['event_description'] = 'creating netcdf file from output water budget file'
     kwargs['progress_value'] = 100
-
-    '''
-    print kwargs['event_name']
-    print kwargs['event_description']
-    print kwargs['progress_value']
-    time.sleep(.1)   
-    '''
-
     if event_emitter:
         event_emitter.emit('progress',**kwargs)

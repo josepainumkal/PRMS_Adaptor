@@ -254,25 +254,16 @@ def animation_to_netcdf(animationFile, parameterFile, outputFileName, event_emit
         columnValues = find_column_values(fileHandle, totalNumberOfDataValues, numberOfMetadataLines, index)		
 	var[:] = columnValues
 
-	if prg%5 == 0:	
-		progress_value = prg/length * 100
-
-	kwargs['event_name'] = 'animation_to_nc'
-        kwargs['event_description'] = 'creating netcdf file from output animation file'
-        kwargs['progress_value'] = format(progress_value, '.2f')
+	if prg % 5 == 0:	
+	    progress_value = prg/length * 100
+            kwargs['event_name'] = 'animation_to_nc'
+            kwargs['event_description'] = 'creating netcdf file from output animation file'
+            kwargs['progress_value'] = format(progress_value, '.2f')
+	    if event_emitter:
+	        event_emitter.emit('progress',**kwargs)
 	
-	'''
-        print kwargs['event_name']
-        print kwargs['event_description']
-        print kwargs['progress_value']
-	import time
-	time.sleep(.1)
-	'''
-
 	prg += 1
-        if event_emitter:
-	    event_emitter.emit('progress',**kwargs)
-
+      
     # Global attributes
     ncfile.title = 'PRMS Animation File'
     ncfile.nsteps = 1
@@ -285,14 +276,6 @@ def animation_to_netcdf(animationFile, parameterFile, outputFileName, event_emit
     kwargs['event_name'] = 'animation_to_nc'
     kwargs['event_description'] = 'creating netcdf file from output animation file'
     kwargs['progress_value'] = 100
-
-    '''
-    print kwargs['event_name']
-    print kwargs['event_description']
-    print kwargs['progress_value']
-    import time
-    time.sleep(.1)   
-    '''
 
     if event_emitter:
         event_emitter.emit('progress',**kwargs)

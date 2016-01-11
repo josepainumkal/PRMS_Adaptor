@@ -161,25 +161,16 @@ def write_variable_data_to_file(temporaryFileHandle, fileHandle, variableNames, 
 	   	    for i in range(sizeOfLatitudeVariable):
 	        	for j in range(len(values[i])):
 			    temporaryFileHandle.write(str(values[i][j])+'\n')
-
 		
-	if prg%5 == 0:	
+	if prg % 5 == 0:	
 	    progress_value = prg/length * 100
-        
-        kwargs['event_name'] = 'nc_to_parameter'
-	kwargs['event_description'] = 'creating input parameter file from output netcdf file'
-        kwargs['progress_value'] = format(progress_value, '.2f')
+            kwargs['event_name'] = 'nc_to_parameter'
+	    kwargs['event_description'] = 'creating input parameter file from output netcdf file'
+            kwargs['progress_value'] = format(progress_value, '.2f')
+            if event_emitter:
+	        event_emitter.emit('progress',**kwargs)
 
-	'''
-	print kwargs['event_name']
-        print kwargs['event_description']
-        print kwargs['progress_value']
-        time.sleep(.1)    
-	'''
-
-        prg += 1
-        if event_emitter:
-	    event_emitter.emit('progress',**kwargs)
+	prg += 1
                 
 
 def netcdf_to_parameter(inputFileName, outputFileName, event_emitter=None, **kwargs):
@@ -229,13 +220,6 @@ def netcdf_to_parameter(inputFileName, outputFileName, event_emitter=None, **kwa
     kwargs['event_description'] = 'creating input parameter file from netcdf file'
     kwargs['progress_value'] = 0.00
 
-    '''
-    print kwargs['event_name']
-    print kwargs['event_description']
-    print kwargs['progress_value']
-    time.sleep(.1)
-    '''
-
     if event_emitter:
         event_emitter.emit('progress',**kwargs)
     
@@ -247,13 +231,6 @@ def netcdf_to_parameter(inputFileName, outputFileName, event_emitter=None, **kwa
     kwargs['event_description'] = 'creating input parameter file from output netcdf file'
     kwargs['progress_value'] = 100
 
-    '''
-    print kwargs['event_name']
-    print kwargs['event_description']
-    print kwargs['progress_value']
-    time.sleep(.1)
-    '''
-    
     if event_emitter:
         event_emitter.emit('progress',**kwargs)
     	

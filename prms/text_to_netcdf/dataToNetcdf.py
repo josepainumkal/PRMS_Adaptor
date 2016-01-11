@@ -290,14 +290,6 @@ def data_to_netcdf(fileInput, outputFileName, event_emitter=None, **kwargs):
     kwargs['event_description'] = 'creating netcdf file from input data file'
     kwargs['progress_value'] = 0.00
 
-    '''
-    print kwargs['event_name']
-    print kwargs['event_description']
-    print kwargs['progress_value']
-    import time
-    time.sleep(.1)
-    '''    
-
     if event_emitter:
         event_emitter.emit('progress',**kwargs)
     
@@ -342,24 +334,15 @@ def data_to_netcdf(fileInput, outputFileName, event_emitter=None, **kwargs):
     	    columnValues = find_column_values(fileHandle, numberOfDays, position)
             var[:] = columnValues
 
-	if prg%5 == 0:
+	if prg % 5 == 0:
 	    progress_value = prg/length * 100
-
-	kwargs['event_name'] = 'data_to_nc'
-        kwargs['event_description'] = 'creating netcdf file from input data file'
-        kwargs['progress_value'] = format(progress_value, '.2f')
-	
-        '''
-	print kwargs['event_name']
-        print kwargs['event_description']
-        print kwargs['progress_value']
-	import time
-        time.sleep(.1)
-	'''
-
+	    kwargs['event_name'] = 'data_to_nc'
+            kwargs['event_description'] = 'creating netcdf file from input data file'
+            kwargs['progress_value'] = format(progress_value, '.2f')
+	    if event_emitter:
+                event_emitter.emit('progress',**kwargs)
 	prg += 1
-        if event_emitter:
-            event_emitter.emit('progress',**kwargs)
+     
     	
     # Global attributes
     ncfile.title = 'Date File'

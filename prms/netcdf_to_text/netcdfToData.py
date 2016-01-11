@@ -199,25 +199,17 @@ def write_variable_data_to_file(fileHandle, temporaryFileHandle, date, event_emi
 		temporaryFileHandle.write(str(fileHandle.variables[variable][timestamp])+" ")
 	temporaryFileHandle.write("\n")
 
-	if prg%5 == 0:	
-		progress_value = prg/(endDate-startDate).days * 100        
-        
-	if progress_value <= 99.99:
-            kwargs['event_name'] = 'nc_to_data'
-	    kwargs['event_description'] = 'creating input data file from output netcdf file'
-            kwargs['progress_value'] = format(progress_value, '.2f')
+	if prg % 5 == 0:	
+	    progress_value = prg/(endDate-startDate).days * 100        
+            if progress_value <= 99.99:
+                kwargs['event_name'] = 'nc_to_data'
+	    	kwargs['event_description'] = 'creating input data file from output netcdf file'
+                kwargs['progress_value'] = format(progress_value, '.2f')
+	    	if event_emitter:
+                    event_emitter.emit('progress',**kwargs)
 
-	    '''
-	    print kwargs['event_name']
-            print kwargs['event_description']
-            print kwargs['progress_value']
-            time.sleep(.1)    
-	    '''
-
-            prg += 1
-	    if event_emitter:
-	        event_emitter.emit('progress',**kwargs)
-        timestamp = timestamp + 1
+    	prg += 1
+	timestamp = timestamp + 1
 
 
 def netcdf_to_data(inputFileName, outputFileName, event_emitter=None, **kwargs):
@@ -255,14 +247,6 @@ def netcdf_to_data(inputFileName, outputFileName, event_emitter=None, **kwargs):
     kwargs['event_name'] = 'nc_to_data'
     kwargs['event_description'] = 'creating input data file from netcdf file'
     kwargs['progress_value'] = 0.00
-
-    '''
-    print kwargs['event_name']
-    print kwargs['event_description']
-    print kwargs['progress_value']
-    time.sleep(.1)
-    '''
-
     if event_emitter:
         event_emitter.emit('progress',**kwargs)
 
@@ -271,14 +255,6 @@ def netcdf_to_data(inputFileName, outputFileName, event_emitter=None, **kwargs):
     kwargs['event_name'] = 'nc_to_data'
     kwargs['event_description'] = 'creating input data file from output netcdf file'
     kwargs['progress_value'] = 100
-
-    '''
-    print kwargs['event_name']
-    print kwargs['event_description']
-    print kwargs['progress_value']
-    time.sleep(.1)
-    '''
-
     if event_emitter:
         event_emitter.emit('progress',**kwargs)
 

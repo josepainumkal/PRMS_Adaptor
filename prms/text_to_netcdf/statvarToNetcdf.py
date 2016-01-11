@@ -161,17 +161,14 @@ def statvar_to_netcdf(statvarFile, outputFileName, event_emitter=None, **kwargs)
         columnValues = find_column_values(statvarFile, numberOfVariables, lastTimeStepValue, index)
         var[:] = columnValues
 
-	if prg%5 == 0:	
+	if prg % 5 == 0:	
 	    progress_value = prg/length * 100
-
-	kwargs['event_name'] = 'statvar_to_nc'
-        kwargs['event_description'] = 'creating netcdf file from output statistics variables file'
-        kwargs['progress_value'] = format(progress_value, '.2f')
-
-	prg += 1
-        if event_emitter:
-            event_emitter.emit('progress',**kwargs)
-	
+	    kwargs['event_name'] = 'statvar_to_nc'
+            kwargs['event_description'] = 'creating netcdf file from output statistics variables file'
+            kwargs['progress_value'] = format(progress_value, '.2f')
+	    if event_emitter:
+                event_emitter.emit('progress',**kwargs)
+	prg += 1     
     
     # Global attributes
     ncfile.title = 'Statistic Variables File'
@@ -185,6 +182,5 @@ def statvar_to_netcdf(statvarFile, outputFileName, event_emitter=None, **kwargs)
     kwargs['event_name'] = 'statvar_to_nc'
     kwargs['event_description'] = 'creating netcdf file from output statistics variables file'
     kwargs['progress_value'] = 100
-
     if event_emitter:
         event_emitter.emit('progress',**kwargs)
