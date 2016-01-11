@@ -220,8 +220,6 @@ def write_variable_data_to_file(fileHandle, temporaryFileHandle, date, event_emi
 
 def netcdf_to_data(inputFileName, outputFileName, event_emitter=None, **kwargs):
 
-    start = time.time()
-    
     variablesFromFile = []
     variableUnitsFromFile = []
 
@@ -266,7 +264,7 @@ def netcdf_to_data(inputFileName, outputFileName, event_emitter=None, **kwargs):
     if event_emitter:
         event_emitter.emit('progress',**kwargs)
 
-    write_variable_data_to_file(fileHandle, temporaryFileHandle, date, event_emitter=event_emitter)
+    write_variable_data_to_file(fileHandle, temporaryFileHandle, date, event_emitter=event_emitter, **kwargs)
 
     kwargs['event_name'] = 'nc_to_data'
     kwargs['event_description'] = 'creating input data file from output netcdf file'

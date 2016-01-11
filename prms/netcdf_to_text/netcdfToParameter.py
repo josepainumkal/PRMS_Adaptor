@@ -182,8 +182,6 @@ def write_variable_data_to_file(temporaryFileHandle, fileHandle, variableNames, 
 
 def netcdf_to_parameter(inputFileName, outputFileName, event_emitter=None, **kwargs):
 
-    start = time.time()
-
     fileHandle = Dataset(inputFileName, 'r')
     temporaryFileHandle = open(outputFileName, 'w')
 
@@ -241,7 +239,7 @@ def netcdf_to_parameter(inputFileName, outputFileName, event_emitter=None, **kwa
     
     write_variable_data_to_file(temporaryFileHandle, fileHandle, variableNames, \
         variableDimensions, countOfDimensions, sizeOfLatitudeVariable, \
-        numberOfParameterValues, variableTypes, numberOfHruCells, event_emitter=event_emitter)
+        numberOfParameterValues, variableTypes, numberOfHruCells, event_emitter=event_emitter, **kwargs)
 
     kwargs['event_name'] = 'nc_to_parameter'
     kwargs['event_description'] = 'creating input parameter file from output netcdf file'
