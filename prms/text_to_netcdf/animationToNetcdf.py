@@ -221,15 +221,6 @@ def animation_to_netcdf(animationFile, parameterFile, outputFileName, event_emit
     kwargs['event_name'] = 'animation_to_nc'
     kwargs['event_description'] = 'creating netcdf file from output animation file'
     kwargs['progress_value'] = 0.05
-
-    '''
-    print kwargs['event_name']
-    print kwargs['event_description']
-    print kwargs['progress_value']
-    import time
-    time.sleep(.1)   
-    '''
-
     if event_emitter:
         event_emitter.emit('progress',**kwargs)
 
@@ -253,15 +244,14 @@ def animation_to_netcdf(animationFile, parameterFile, outputFileName, event_emit
         fileHandle = open(animationFile, 'r')
         columnValues = find_column_values(fileHandle, totalNumberOfDataValues, numberOfMetadataLines, index)		
 	var[:] = columnValues
-
-	if prg % 5 == 0:	
+        
+	if int(prg % 2) == 0:	
 	    progress_value = prg/length * 100
             kwargs['event_name'] = 'animation_to_nc'
             kwargs['event_description'] = 'creating netcdf file from output animation file'
             kwargs['progress_value'] = format(progress_value, '.2f')
 	    if event_emitter:
 	        event_emitter.emit('progress',**kwargs)
-	
 	prg += 1
       
     # Global attributes

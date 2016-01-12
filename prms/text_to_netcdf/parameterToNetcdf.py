@@ -310,21 +310,13 @@ def parameter_to_netcdf(parameterFile, locationFile, numberOfHruCells, numberOfR
     kwargs['event_name'] = 'parameter_to_nc'
     kwargs['event_description'] = 'creating netcdf file from input parameter file'
     kwargs['progress_value'] = 0.00
-
-    '''
-    print kwargs['event_name']
-    print kwargs['event_description']
-    print kwargs['progress_value']
-    time.sleep(.1)   
-    '''
-
     if event_emitter:
         event_emitter.emit('progress',**kwargs)
 
     prg = 0.10
     length = len(spaceRelatedParameterNames)
-
-    for index in range(len(spaceRelatedParameterNames)):
+  
+    for index in range(length):
         value = find_variable_type(spaceRelatedParameterTypes[index])
 	metadata = add_metadata(spaceRelatedParameterNames[index])
         parameterName = metadata[0]
@@ -343,18 +335,16 @@ def parameter_to_netcdf(parameterFile, locationFile, numberOfHruCells, numberOfR
     	fileHandle = open(fileLocation, 'r')
         values = find_space_dependent_parameter_values(fileHandle, spaceRelatedParameterNames[index], numberOfHruCells)		
 	var[:] = values
-    
-        if prg % 5 == 0:	
+
+        if int(prg % 5) == 0:	
             progress_value = prg/length * 100
             kwargs['event_name'] = 'parameter_to_nc'
             kwargs['event_description'] = 'creating netcdf file from input parameter file'
             kwargs['progress_value'] = format(progress_value, '.2f')
 	    if event_emitter:
                 event_emitter.emit('progress',**kwargs)
-
 	prg += 1
-       
-
+ 
     for index in range(len(spaceAndTimeRelatedParameterNames)):
 	value = find_variable_type(spaceAndTimeRelatedParameterTypes[index])
         metadata = add_metadata(spaceAndTimeRelatedParameterNames[index])

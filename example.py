@@ -3,6 +3,12 @@ from pyee import EventEmitter
 
 ee = EventEmitter()
 
+'''
+@ee.on('progress')
+def progress(**kwargs):
+    print kwargs
+'''
+
 from prms.text_to_netcdf import dataToNetcdf
 dataToNetcdf.data_to_netcdf(os.getcwd()+'/prms/input_files/LC.data', os.getcwd()+'/prms/outputs/data.nc', event_emitter=ee)
 

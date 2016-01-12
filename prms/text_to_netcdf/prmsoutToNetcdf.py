@@ -151,15 +151,6 @@ def prmsout_to_netcdf(fileInput, outputFileName, event_emitter=None, **kwargs):
     kwargs['event_name'] = 'prmsout_to_nc'
     kwargs['event_description'] = 'creating netcdf file from output water budget file'
     kwargs['progress_value'] = 0.00
-
-    '''
-    print kwargs['event_name']
-    print kwargs['event_description']
-    print kwargs['progress_value']
-    import time
-    time.sleep(.3)   
-    '''
-
     if event_emitter:
         event_emitter.emit('progress',**kwargs)
 
@@ -179,8 +170,8 @@ def prmsout_to_netcdf(fileInput, outputFileName, event_emitter=None, **kwargs):
 
         values = get_values(variableValues, index+1)
         var[:] = values
-
-	if prg % 5 == 0:	
+	
+	if int(prg % 2) == 0:	
 	    progress_value = prg/length * 100
        	    kwargs['event_name'] = 'prmsout_to_nc'
             kwargs['event_description'] = 'creating netcdf file from output water budget file'

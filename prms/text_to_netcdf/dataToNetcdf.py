@@ -297,7 +297,7 @@ def data_to_netcdf(fileInput, outputFileName, event_emitter=None, **kwargs):
     length = len(variableNames)
 
     # Define other variables
-    for i in range(len(variableNames)):
+    for i in range(length):
 
 	if variableLengths[i] > 1:
 
@@ -334,7 +334,7 @@ def data_to_netcdf(fileInput, outputFileName, event_emitter=None, **kwargs):
     	    columnValues = find_column_values(fileHandle, numberOfDays, position)
             var[:] = columnValues
 
-	if prg % 5 == 0:
+        if int(prg % 1) == 0:
 	    progress_value = prg/length * 100
 	    kwargs['event_name'] = 'data_to_nc'
             kwargs['event_description'] = 'creating netcdf file from input data file'
@@ -356,18 +356,9 @@ def data_to_netcdf(fileInput, outputFileName, event_emitter=None, **kwargs):
     kwargs['event_name'] = 'data_to_nc'
     kwargs['event_description'] = 'creating netcdf file from input data file'
     kwargs['progress_value'] = 100
-
-    '''
-    print kwargs['event_name']
-    print kwargs['event_description']
-    print kwargs['progress_value']
-    import time
-    time.sleep(.1)
-    '''
-
     if event_emitter:
         event_emitter.emit('progress',**kwargs)
 
-    
+
    
 
