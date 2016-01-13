@@ -190,8 +190,9 @@ def write_variable_data_to_file(fileHandle, temporaryFileHandle, date, event_emi
     startDate = datetime.date(startYear, startMonth, startDay)
     endDate = datetime.date(endYear, endMonth, endDay)
     prg = 0.10
-    numberOfDays = (endDate-startDate).days
-
+    i = 0
+    numberOfDays = (endDate-startDate).days / 5
+       
     for dt in rrule(DAILY, dtstart=startDate, until=endDate):
 	temporaryFileHandle.write(dt.strftime("%Y %m %d 0 0 0")+" ")
 	
@@ -200,15 +201,15 @@ def write_variable_data_to_file(fileHandle, temporaryFileHandle, date, event_emi
 		temporaryFileHandle.write(str(fileHandle.variables[variable][timestamp])+" ")
 	temporaryFileHandle.write("\n")
 
-	if int(prg % 10) == 0:	
-	    progress_value = prg/numberOfDays * 100        
-            if progress_value<=99.99:
+	progress_value = prg/(endDate-startDate).days * 100    
+	if i%numberOfDays == 0 and progress_value<=99.99:
                 kwargs['event_name'] = 'nc_to_data'
 	    	kwargs['event_description'] = 'creating input data file from output netcdf file'
                 kwargs['progress_value'] = format(progress_value, '.2f')
 		if event_emitter:
                     event_emitter.emit('progress',**kwargs)
-    	prg += 1
+	i += 1    	
+	prg += 1
 	timestamp = timestamp + 1
 
 
