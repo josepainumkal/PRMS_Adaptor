@@ -27,8 +27,7 @@ def find_global_attributes(fileHandle):
 	    value = find_value(line).split()
             sumOfHruAreas = value[0]
 	    activeBasinArea = value[len(value)-1]
-	    
-	if 'Impervious basin area' in line:
+	    line = fileHandle.next()
 	    value = find_value(line).split()
 	    imperviousBasinArea = value[0]
 	    perviousBasinArea = value[len(value)-1]
@@ -156,7 +155,7 @@ def prmsout_to_netcdf(fileInput, outputFileName, event_emitter=None, **kwargs):
 
     prg = 0.10
     length = len(variables)
-
+    
     for index in range(len(variables)):
 	metadata = add_metadata(variables[index])
 	variableName = metadata[0]
