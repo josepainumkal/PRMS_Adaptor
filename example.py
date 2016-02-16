@@ -3,11 +3,9 @@ from pyee import EventEmitter
 
 ee = EventEmitter()
 
-'''
 @ee.on('progress')
 def progress(**kwargs):
     print kwargs
-'''
 
 from prms.text_to_netcdf import dataToNetcdf
 dataToNetcdf.data_to_netcdf(os.getcwd()+'/prms/input_files/LC.data', os.getcwd()+'/prms/outputs/data.nc', event_emitter=ee)
@@ -20,9 +18,6 @@ controlToNetcdf.control_to_netcdf(os.getcwd()+'/prms/input_files/LC.control', os
 
 from prms.text_to_netcdf import animationToNetcdf
 animationToNetcdf.animation_to_netcdf(os.getcwd()+'/prms/output_files/animation.out.nhru', os.getcwd()+'/prms/outputs/parameter.nc', os.getcwd()+'/prms/outputs/animation.nc', event_emitter=ee)
-
-# from prms.text_to_netcdf import animationToNetcdf
-# animationToNetcdf.animation_to_netcdf(os.getcwd()+'/prms/output_files/animation.out.nhru', os.getcwd()+'/prms/XY.DAT', 4704, 49, 96, os.getcwd()+'/prms/outputs/animation.nc')
 
 from prms.text_to_netcdf import prmsoutToNetcdf
 prmsoutToNetcdf.prmsout_to_netcdf(os.getcwd()+'/prms/output_files/prms.out', os.getcwd()+'/prms/outputs/prmsout.nc', event_emitter=ee)
