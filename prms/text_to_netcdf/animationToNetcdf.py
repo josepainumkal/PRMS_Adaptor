@@ -1,5 +1,6 @@
 import gdal
-import netCDF4   
+import netCDF4 
+import numpy  
 import osr   
 import sys
 import os
@@ -119,18 +120,17 @@ def animation_to_netcdf(animationFile, parameterFile, outputFileName, event_emit
 	numberOfHruCells = values[0]
 	numberOfRows = values[1]
 	numberOfColumns = values[2]
-
+	
 	values = extract_lat_and_lon_information(parameterFile)
 	latitudeValues = values[0]
 	longitudeValues = values[1]
 
 	numberOfMetadataLines = 0
 	timeValues = []
-	numberOfHRUValues = [] 
 
 	fileHandle = open(animationFile, 'r')
 	totalNumberOfLines = sum(1 for _ in fileHandle)
-
+	
 	fileHandle = open(animationFile, 'r')
 	for line in fileHandle:
 		if '#' in line:
@@ -142,23 +142,23 @@ def animation_to_netcdf(animationFile, parameterFile, outputFileName, event_emit
 	fileHandle = open(animationFile, 'r')
 	for i in range(numberOfMetadataLines):
 		fileHandle.next()
-	outputVariableNames = fileHandle.next().strip().split()[2:]
+	variables = fileHandle.next().strip().split()[2:]
+	
 	fileHandle.next()
 	firstDate = fileHandle.next().strip().split()[0]     
-
+	
 	# Initialize new dataset
 	ncfile = netCDF4.Dataset(outputFileName, mode='w')
 
 	# Initialize dimensions
-	time_dim = ncfile.createDimension('time', 1)  
+	time_dim = ncfile.createDimension('time', numberOfTimeSteps)  
 	nrows_dim = ncfile.createDimension('lat', numberOfRows)
 	ncols_dim = ncfile.createDimension('lon', numberOfColumns)
 
 	time = ncfile.createVariable('time', 'i4', ('time',))
 	time.long_name = 'time'  
 	time.units = 'days since '+firstDate
-	for index in range(1):
-		timeValues.append(index+1)	
+	timeValues = numpy.arange(1, numberOfTimeSteps+1, 1)
 	time[:] = timeValues
 
 	lat = ncfile.createVariable('lat', 'f8', ('lat',))
@@ -183,32 +183,114 @@ def animation_to_netcdf(animationFile, parameterFile, outputFileName, event_emit
 		event_emitter.emit('progress',**kwargs)
 
 	prg = 0.10
-	length = len(outputVariableNames)
-
-	for index in range(length):
-		metadata = add_metadata(outputVariableNames[index])
+	
+	for index in range(len(variables)):
+		metadata = add_metadata(variables[index])
 		outputVariableName = metadata[0]
 		outputVariableDescription = metadata[1]
 		outputVariableUnit = metadata[2]
 
-		var = ncfile.createVariable(outputVariableNames[index], 'f8', ('time', 'lat', 'lon')) 
+		var = ncfile.createVariable(variables[index], 'f8', ('time', 'lat', 'lon'), zlib=True, complevel=9)
 		var.layer_name = outputVariableName
 		var.layer_desc = outputVariableDescription
 		var.layer_units = outputVariableUnit
 		var.grid_mapping = "crs" 
 
-		fileHandle = open(animationFile, 'r')
-		columnValues = find_column_values(fileHandle, totalNumberOfDataValues/numberOfTimeSteps, numberOfMetadataLines, index)		
-		var[:] = columnValues
+	limit = 725000
+	
+	i = 0
+	j = 0
+	timeStep = 0
 
-		if int(prg % 2) == 0:	
-			progress_value = prg/length * 100
-			kwargs['event_name'] = 'animation_to_nc'
-			kwargs['event_description'] = 'creating netcdf file from output animation file'
-			kwargs['progress_value'] = format(progress_value, '.2f')
-			if event_emitter:
-				event_emitter.emit('progress',**kwargs)
-		prg += 1
+	values = []
+	for i in range(len(variables)):
+		values.append([])
+	
+	fileHandle = open(animationFile, 'r')
+
+	for p in range(numberOfMetadataLines):
+		fileHandle.next()
+
+	for q in range(2):
+		fileHandle.next()
+
+	ncols = numberOfColumns
+	product = numberOfRows * numberOfColumns
+	pdt = product
+	tS = 0
+
+	if product <= limit:
+		tS = tS + 1
+		while pdt + product <= limit and pdt + product <= totalNumberOfDataValues:
+			pdt = pdt + product
+			tS = tS + 1
+		add = tS
+		chunkSize = pdt
+	#print chunkSize
+	while totalNumberOfDataValues > 0:
+		print 'totalNumberOfDataValues: ', totalNumberOfDataValues 
+		if product <= limit:
+			if totalNumberOfDataValues >= pdt:
+				chunkSize = pdt
+			else:
+				chunkSize = totalNumberOfDataValues	
+			print chunkSize	
+			for index in range(chunkSize):
+				ListofVars = fileHandle.next().strip().split()[2:]
+				for m in range(len(variables)):
+					values[m].append(ListofVars[m])
+				#values.append(fileHandle.next().strip().split()[2:])
+				totalNumberOfDataValues -= 1
+
+			for k in range(len(variables)):
+				ncfile.variables[variables[k]][timeStep:tS, :, :] = values[k]
+				values[k] = []
+
+			timeStep = tS
+			#values = []
+			if totalNumberOfDataValues >= pdt:
+				tS = tS + add
+			else:
+				tS = timeStep + (totalNumberOfDataValues/product)
+			print 'time step: ', timeStep
+			print 'ts: ', tS
+		
+		else:
+			if ncols > limit:
+				chunkSize = limit
+				ncols = ncols - limit
+			else:
+				chunkSize = ncols
+
+			for index in range(chunkSize):
+				values.append(fileHandle.next().strip().split()[2:])
+				totalNumberOfDataValues -= 1
+
+			for k in range(len(variables)): 
+				columnValues = [row[k] for row in values] 
+				ncfile.variables[variables[k]][timeStep:timeStep+1, i:i+1, j:j+chunkSize] = columnValues
+			values = []
+		
+			j = j + chunkSize
+			if j >= numberOfColumns:
+				i = i + 1
+				if i == numberOfRows:
+					i = 0
+				timeStep = timeStep + 1
+				j = 0
+				ncols = numberOfColumns
+	'''
+
+	if int(prg % 2) == 0:	
+		progress_value = prg/length * 100
+		kwargs['event_name'] = 'animation_to_nc'
+		kwargs['event_description'] = 'creating netcdf file from output animation file'
+		kwargs['progress_value'] = format(progress_value, '.2f')
+		if event_emitter:
+			event_emitter.emit('progress',**kwargs)
+	prg += 1
+
+	'''
 
 	# Global attributes
 	ncfile.title = 'PRMS Animation File'
@@ -216,15 +298,14 @@ def animation_to_netcdf(animationFile, parameterFile, outputFileName, event_emit
 	ncfile.bands_name = 'nsteps'
 	ncfile.bands_desc = 'Variable information for ' + animationFile
 
-	# Close the 'ncfile' object
-	ncfile.close()
-
 	kwargs['event_name'] = 'animation_to_nc'
 	kwargs['event_description'] = 'creating netcdf file from output animation file'
 	kwargs['progress_value'] = 100
 	if event_emitter:
 		event_emitter.emit('progress',**kwargs)
-    
+
+    # Close the 'ncfile' object
+	ncfile.close()
 
 
 
