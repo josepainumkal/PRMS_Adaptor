@@ -124,10 +124,9 @@ def write_variable_data_to_file(temporaryFileHandle, fileHandle, variableNames, 
 
     prg = 0.10
     length = len(variableNames)
-    
     temporaryFileHandle.write('** Parameters **\n')
     
-    for index in range(len(variableNames)):
+    for index in range(length):
 
         temporaryFileHandle.write('####\n'+variableNames[index]+'\n'+str(countOfDimensions[index])+'\n')
 

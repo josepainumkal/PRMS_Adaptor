@@ -6,126 +6,20 @@ import os
 import sys
 from pyee import EventEmitter
 
-
-def find_attribute_names(fileHandle):
-
-    headerLabelValues = []
-
-    for variable in fileHandle.variables:
-        if variable != 'time':
-	    # Get attribute names of all the variables except time
-            attributesOfAVariable = fileHandle.variables[variable].ncattrs()
-	    break
-
-    # Get attribute names - added Type and excluded units
-    headerLabelValues.append('Type')
-    for index in range(len(attributesOfAVariable)):
-        if attributesOfAVariable[index] != 'layer_name' and attributesOfAVariable[index] != 'layer_desc' and attributesOfAVariable[index] != 'layer_units':
-	    headerLabelValues.append(str(attributesOfAVariable[index]))
-
-    return headerLabelValues
-
-def find_unit_label(fileHandle):
-
-    for variable in fileHandle.variables:
-        if variable != 'time':
-	    # Get attribute names of all the variables except time
-            attributesOfAVariable = fileHandle.variables[variable].ncattrs()
-	    break
-
-    # Get attribute names - added Type and excluded units
-    for index in range(len(attributesOfAVariable)):
-        if attributesOfAVariable[index] == 'layer_units':
-	    unitLabel = str(attributesOfAVariable[index])
-
-    return unitLabel
-
-
-def find_and_write_attribute_values_to_file(headerLabelValues, fileHandle, temporaryFileHandle, variablesFromFile):
-
-    temporaryFileHandle.write('///////////////////////////////////////////////////////////////////\n// Station metadata:\n// ')
-
-    for label in headerLabelValues:
-        temporaryFileHandle.write(label+' ')
-
-    for variable in variablesFromFile:
-
-        if variable != 'time':
-            var = fileHandle.variables[variable]
-
-            if '_' in variable:
-                position = variable.find('_')
-                temporaryFileHandle.write('\n// '+variable[0:position]+' ')
-
-	    else:
-	        temporaryFileHandle.write('\n// '+variable+' ')
-
-            for label in headerLabelValues:
-                if label != 'Type':
-                    temporaryFileHandle.write(getattr(var, label)+' ')
-
-def find_variable_units_from_file(unitLabel, variablesFromFile, fileHandle):
-
-    variableUnitsFromFile = []
-
-    for variable in variablesFromFile:
-	var = fileHandle.variables[variable]
-        if variable == 'time':
-	     variableUnitsFromFile.append(getattr(var, 'units'))
-	elif variable != 'time':
-	     variableUnitsFromFile.append(getattr(var, unitLabel))
-
-    return variableUnitsFromFile
-
-
-def find_variables_and_variable_units(variablesFromFile, variableUnitsFromFile):
+def find_variables(variablesFromFile):
 
     variables = []
-    variableUnits = []
-
+    
     for index in range(len(variablesFromFile)):
         if '_' in variablesFromFile[index]:
             position = variablesFromFile[index].find('_')
             if variablesFromFile[index][0:position] not in variables:
                 variables.append(str(variablesFromFile[index][0:position]))
-		variableUnits.append(str(variableUnitsFromFile[index]))
-
+		
         elif variablesFromFile[index] != 'time':
             variables.append(str(variablesFromFile[index]))
-	    variableUnits.append(str(variableUnitsFromFile[index]))
-
-    return variables, variableUnits
-
-
-def find_variables_and_variable_units_in_metadata(variables, variableUnits):
-
-    variablesInMetaData = []
-    variableUnitsInMetaData = []
-    for variable in variables:
-
-        if variable == 'tmax' or variable == 'tmin':
-	    if 'temperature' not in  variablesInMetaData:
-	        variablesInMetaData.append('temperature')
-		position = variables.index(variable)
-        	variableUnitsInMetaData.append(variableUnits[position])
-	else:
-	    variablesInMetaData.append(variable)
-            position = variables.index(variable)
-            variableUnitsInMetaData.append(variableUnits[position])
-
-    return variablesInMetaData, variableUnitsInMetaData
-
-
-def write_variable_units_to_file(temporaryFileHandle, variablesInMetadata, variableUnitsInMetadata):
-
-    temporaryFileHandle.write('\n///////////////////////////////////////////////////////////////////\n// Unit: ')
-    for index in range(len(variablesInMetadata)):
-        if index != len(variablesInMetadata)-1:
-            temporaryFileHandle.write(variablesInMetadata[index]+' = '+ variableUnitsInMetadata[index]+", ")
-        else:
-	    temporaryFileHandle.write(variablesInMetadata[index]+' = '+ variableUnitsInMetadata[index]+"\n")
-    temporaryFileHandle.write('///////////////////////////////////////////////////////////////////\n')
-
+	    
+    return variables
 
 def find_count_of_variables(variables, variablesFromFile):
 
@@ -223,28 +117,15 @@ def netcdf_to_data(inputFileName, outputFileName, event_emitter=None, **kwargs):
 
     for variable in fileHandle.variables:
         variablesFromFile.append(variable)
-
-    attributeNames = find_attribute_names(fileHandle)
-    attributeValues = find_and_write_attribute_values_to_file(attributeNames, fileHandle, temporaryFileHandle, variablesFromFile)
-
-    unitLabel = find_unit_label(fileHandle)
-    variableUnitsFromFile = find_variable_units_from_file(unitLabel, variablesFromFile, fileHandle)
-
-    var = find_variables_and_variable_units(variablesFromFile, variableUnitsFromFile)
-    variables = var[0]
-    variableUnits = var[1]
-
-    varInMetadata = find_variables_and_variable_units_in_metadata(variables, variableUnits)
-    variablesInMetadata = varInMetadata[0]
-    variableUnitsInMetadata = varInMetadata[1]
-
-    write_variable_units_to_file(temporaryFileHandle, variablesInMetadata, variableUnitsInMetadata)
+    
+    variables = find_variables(variablesFromFile)
     countOfVariables = find_count_of_variables(variables, variablesFromFile)
+        
     write_variables_to_file(temporaryFileHandle, variables, countOfVariables)
-
+    
     temporaryFileHandle.write('####################################################################\n')
     date = find_start_and_end_dates(fileHandle)
-
+    
     kwargs['event_name'] = 'nc_to_data'
     kwargs['event_description'] = 'creating input data file from netcdf file'
     kwargs['progress_value'] = 0.00
@@ -258,4 +139,4 @@ def netcdf_to_data(inputFileName, outputFileName, event_emitter=None, **kwargs):
     kwargs['progress_value'] = 100
     if event_emitter:
         event_emitter.emit('progress',**kwargs)
-
+    

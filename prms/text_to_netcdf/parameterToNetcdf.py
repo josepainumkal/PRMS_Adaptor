@@ -80,8 +80,9 @@ def find_parameters(fileHandle, numberOfHruCells):
 		    spaceRelatedParameterNames.append(name)	
 		    spaceRelatedParameterTypes.append(typeOfValues)
 		else:
-		    if name != 'jh_coef' and name != 'basin_tsta':
-			otherParameterDimensions.append(dimension)
+		    if name != 'jh_coef' and name != 'basin_tsta' \
+		        and name != 'reach_segment':
+		        otherParameterDimensions.append(dimension)
 		        otherParameterNames.append(name)
 		        otherParameterTypes.append(typeOfValues)
 		        otherParameterDimensionValues.append(numberOfValues)	
@@ -221,6 +222,11 @@ def add_metadata(parameterName):
 		
 	        break;
 
+	else:
+	    parameterName = parameterName
+	    parameterDescription = 'None'
+	    parameterUnit = 'None'
+
     return parameterName, parameterDescription, parameterUnit
 
 def find_variable_type(parameterType):
@@ -257,7 +263,7 @@ def parameter_to_netcdf(parameterFile, locationFile, numberOfHruCells, numberOfR
     otherParameterNames = parameters[7]
     otherParameterTypes = parameters[8]
     otherParameterDimensionValues = parameters[9]
-                        
+
     if spaceAndTimeRelatedParameterNames:
 	monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
        
@@ -317,7 +323,7 @@ def parameter_to_netcdf(parameterFile, locationFile, numberOfHruCells, numberOfR
     i = 0
     length = len(spaceRelatedParameterNames)
     numberOfParameters = length / 5
-  
+
     for index in range(length):
         value = find_variable_type(spaceRelatedParameterTypes[index])
 	metadata = add_metadata(spaceRelatedParameterNames[index])
@@ -369,7 +375,6 @@ def parameter_to_netcdf(parameterFile, locationFile, numberOfHruCells, numberOfR
             values = find_space_and_time_dependent_parameter_values(fileHandle, spaceAndTimeRelatedParameterNames[index], numberOfHruCells, monthIndex)		
 	    var[:] = values
 
-    
     for index in range(len(otherParameterNames)):
         value = find_variable_type(otherParameterTypes[index])
 	metadata = add_metadata(otherParameterNames[index])
@@ -407,5 +412,5 @@ def parameter_to_netcdf(parameterFile, locationFile, numberOfHruCells, numberOfR
     kwargs['progress_value'] = 100
     if event_emitter:
         event_emitter.emit('progress',**kwargs)
-    
+  
 
