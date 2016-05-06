@@ -137,16 +137,16 @@ def animation_to_netcdf(animationFile, parameterFile, outputFileName, event_emit
 	fileHandle = open(animationFile, 'r')
 	totalNumberOfLines = sum(1 for _ in fileHandle)
 	
-	print "LISA"
-	
+	kwargs['event_name'] = 'animation_to_nc'
+	kwargs['event_description'] = 'creating netcdf file from output animation file'
+	kwargs['progress_value'] = 0.01
+
 	fileHandle = open(animationFile, 'r')
 	for line in fileHandle:
 		if '#' in line:
 			numberOfMetadataLines = numberOfMetadataLines + 1
 		else:
 			break
-
-	print "RINI"
 
 	totalNumberOfDataValues = totalNumberOfLines-(numberOfMetadataLines+2)
 	numberOfTimeSteps = totalNumberOfDataValues/(numberOfRows*numberOfColumns)
@@ -156,8 +156,6 @@ def animation_to_netcdf(animationFile, parameterFile, outputFileName, event_emit
 		fileHandle.next()
 	variables = fileHandle.next().strip().split()[2:]
 	
-	print "TIJO"
-
 	fileHandle.next()
 	firstDate = fileHandle.next().strip().split()[0]     
 	
@@ -175,7 +173,9 @@ def animation_to_netcdf(animationFile, parameterFile, outputFileName, event_emit
 	timeValues = numpy.arange(1, numberOfTimeSteps+1, 1)
 	time[:] = timeValues
 
-	print "TESSY"
+	kwargs['event_name'] = 'animation_to_nc'
+	kwargs['event_description'] = 'creating netcdf file from output animation file'
+	kwargs['progress_value'] = 0.03
 
 	lat = ncfile.createVariable('lat', 'f8', ('lat',))
 	lat.long_name = 'latitude'  
@@ -186,8 +186,6 @@ def animation_to_netcdf(animationFile, parameterFile, outputFileName, event_emit
 	lon.long_name = 'longitude'  
 	lon.units = 'degrees_east'
 	lon[:] = longitudeValues
-
-	print "JOY"
 
 	sr = osr.SpatialReference()
 	sr.ImportFromEPSG(4326)
@@ -200,8 +198,6 @@ def animation_to_netcdf(animationFile, parameterFile, outputFileName, event_emit
 	if event_emitter:
 		event_emitter.emit('progress',**kwargs)
 
-	prg = 0.10
-	
 	for index in range(len(variables)):
 		metadata = add_metadata(variables[index])
 		outputVariableName = metadata[0]
@@ -298,18 +294,15 @@ def animation_to_netcdf(animationFile, parameterFile, outputFileName, event_emit
 				timeStep = timeStep + 1
 				j = 0
 				ncols = numberOfColumns
-	'''
-
-	if int(prg % 2) == 0:	
-		progress_value = prg/length * 100
-		kwargs['event_name'] = 'animation_to_nc'
-		kwargs['event_description'] = 'creating netcdf file from output animation file'
-		kwargs['progress_value'] = format(progress_value, '.2f')
-		if event_emitter:
-			event_emitter.emit('progress',**kwargs)
-	prg += 1
-
-	'''
+	
+		if int(prg % 2) == 0:	
+			progress_value = prg/length * 100
+			kwargs['event_name'] = 'animation_to_nc'
+			kwargs['event_description'] = 'creating netcdf file from output animation file'
+			kwargs['progress_value'] = format(progress_value, '.2f')
+			if event_emitter:
+				event_emitter.emit('progress',**kwargs)
+		prg += 1
 
 	# Global attributes
 	ncfile.title = 'PRMS Animation File'
