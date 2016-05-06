@@ -82,6 +82,11 @@ def find_metadata(outputVariableName):
 	    lengthOfVariableType = len(variableTypeFromFile)
 	    positionOfTypeStart = variableTypeFromFile.index(':') + 2
 	    variableType = variableTypeFromFile[positionOfTypeStart:lengthOfVariableType]
+	else:
+	    variableName = outputVariableName
+	    variableDescription = 'None'
+	    variableUnit = 'None'
+	    variableType = 'real'
 		
 	    break;
           
@@ -105,7 +110,7 @@ def statvar_to_netcdf(statvarFile, outputFileName, event_emitter=None, **kwargs)
     # Finding the names and array indices of output variables
     outputVariables = find_output_variables(fileHandle, numberOfVariables)
     outputVariableNames = outputVariables[0]
-    outputVariableArrayIndices = outputVariables[1]
+    outputVariableArrayIndices = outputVariables[1]  
    
     # Finding the first date
     firstDate = fileHandle.next().strip().split()[1:7]
@@ -138,6 +143,8 @@ def statvar_to_netcdf(statvarFile, outputFileName, event_emitter=None, **kwargs)
     prg = 0.10
     length = len(outputVariableNames)
     
+    newNamesWithIndices = []
+   
     # Define other variables  
     for index in range(len(outputVariableNames)):
 	metadata = find_metadata(outputVariableNames[index])
@@ -153,13 +160,15 @@ def statvar_to_netcdf(statvarFile, outputFileName, event_emitter=None, **kwargs)
 	elif variableType == 'integer':
 	    value = 'i4'
 
-        var = ncfile.createVariable(outputVariableNames[index]+'_'+outputVariableArrayIndices[index], value, ('time',))
-        var.layer_name = variableName
-	var.hru = outputVariableArrayIndices[index]
-	var.layer_desc = variableDescription
-	var.layer_units = variableUnit
-        columnValues = find_column_values(statvarFile, numberOfVariables, lastTimeStepValue, index)
-        var[:] = columnValues
+	if outputVariableNames[index]+'_'+outputVariableArrayIndices[index] not in newNamesWithIndices:
+	    newNamesWithIndices.append(outputVariableNames[index]+'_'+outputVariableArrayIndices[index])
+	    var = ncfile.createVariable(outputVariableNames[index]+'_'+outputVariableArrayIndices[index], value, ('time',))
+            var.layer_name = variableName
+	    var.hru = outputVariableArrayIndices[index]
+	    var.layer_desc = variableDescription
+	    var.layer_units = variableUnit
+            columnValues = find_column_values(statvarFile, numberOfVariables, lastTimeStepValue, index)
+            var[:] = columnValues
 
 	if int(prg % 3) == 0:	
 	    progress_value = prg/length * 100
@@ -184,3 +193,4 @@ def statvar_to_netcdf(statvarFile, outputFileName, event_emitter=None, **kwargs)
     kwargs['progress_value'] = 100
     if event_emitter:
         event_emitter.emit('progress',**kwargs)
+    
