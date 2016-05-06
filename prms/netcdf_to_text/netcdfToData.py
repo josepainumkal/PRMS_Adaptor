@@ -115,6 +115,7 @@ def netcdf_to_data(inputFileName, outputFileName, event_emitter=None, **kwargs):
     fileHandle = Dataset(inputFileName, 'r')
     temporaryFileHandle = open(outputFileName, 'w')
 
+    temporaryFileHandle.write('////////////////////////////////////////////////////////////////////\n')
     for variable in fileHandle.variables:
         variablesFromFile.append(variable)
     
