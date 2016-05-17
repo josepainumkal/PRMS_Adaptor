@@ -79,11 +79,6 @@ def add_metadata(outputVariableName):
 			positionOfUnitStart = outputVariableUnitFromFile.index(':') + 2
 			outputVariableUnit = outputVariableUnitFromFile[positionOfUnitStart:lengthOfOutputVariableUnit]
 
-		else:
-			outputVariableName = outputVariableName
-			outputVariableDescription = 'None'
-			outputVariableUnit = 'None'
-
 			break;
 
 	return outputVariableName, outputVariableDescription, outputVariableUnit
@@ -118,7 +113,6 @@ def animation_to_netcdf(animationFile, parameterFile, outputFileName, event_emit
 	kwargs['event_name'] = 'animation_to_nc'
 	kwargs['event_description'] = 'creating netcdf file from output animation file'
 	kwargs['progress_value'] = 0.00
-
 	if event_emitter:
 		event_emitter.emit('progress',**kwargs)
 
@@ -137,16 +131,10 @@ def animation_to_netcdf(animationFile, parameterFile, outputFileName, event_emit
 	fileHandle = open(animationFile, 'r')
 	totalNumberOfLines = sum(1 for _ in fileHandle)
 	
-	kwargs['event_name'] = 'animation_to_nc'
-	kwargs['event_description'] = 'creating netcdf file from output animation file'
-	kwargs['progress_value'] = 0.01
-
 	fileHandle = open(animationFile, 'r')
 	for line in fileHandle:
 		if '#' in line:
 			numberOfMetadataLines = numberOfMetadataLines + 1
-		else:
-			break
 
 	totalNumberOfDataValues = totalNumberOfLines-(numberOfMetadataLines+2)
 	numberOfTimeSteps = totalNumberOfDataValues/(numberOfRows*numberOfColumns)
@@ -173,10 +161,6 @@ def animation_to_netcdf(animationFile, parameterFile, outputFileName, event_emit
 	timeValues = numpy.arange(1, numberOfTimeSteps+1, 1)
 	time[:] = timeValues
 
-	kwargs['event_name'] = 'animation_to_nc'
-	kwargs['event_description'] = 'creating netcdf file from output animation file'
-	kwargs['progress_value'] = 0.03
-
 	lat = ncfile.createVariable('lat', 'f8', ('lat',))
 	lat.long_name = 'latitude'  
 	lat.units = 'degrees_north'
@@ -198,6 +182,8 @@ def animation_to_netcdf(animationFile, parameterFile, outputFileName, event_emit
 	if event_emitter:
 		event_emitter.emit('progress',**kwargs)
 
+	prg = 0.10
+	
 	for index in range(len(variables)):
 		metadata = add_metadata(variables[index])
 		outputVariableName = metadata[0]
@@ -210,8 +196,7 @@ def animation_to_netcdf(animationFile, parameterFile, outputFileName, event_emit
 		var.layer_units = outputVariableUnit
 		var.grid_mapping = "crs" 
 
-	#limit = 725000
-	limit = 10000000
+	limit = 725000
 	
 	i = 0
 	j = 0
@@ -233,6 +218,7 @@ def animation_to_netcdf(animationFile, parameterFile, outputFileName, event_emit
 	product = numberOfRows * numberOfColumns
 	pdt = product
 	tS = 0
+	length = len(variables)
 
 	if product <= limit:
 		tS = tS + 1
@@ -241,11 +227,9 @@ def animation_to_netcdf(animationFile, parameterFile, outputFileName, event_emit
 			tS = tS + 1
 		add = tS
 		chunkSize = pdt
-	
+	#print chunkSize
 	while totalNumberOfDataValues > 0:
-		
 		print 'totalNumberOfDataValues: ', totalNumberOfDataValues 
-		
 		if product <= limit:
 			if totalNumberOfDataValues >= pdt:
 				chunkSize = pdt
@@ -256,6 +240,7 @@ def animation_to_netcdf(animationFile, parameterFile, outputFileName, event_emit
 				ListofVars = fileHandle.next().strip().split()[2:]
 				for m in range(len(variables)):
 					values[m].append(ListofVars[m])
+				#values.append(fileHandle.next().strip().split()[2:])
 				totalNumberOfDataValues -= 1
 
 			for k in range(len(variables)):
@@ -263,6 +248,7 @@ def animation_to_netcdf(animationFile, parameterFile, outputFileName, event_emit
 				values[k] = []
 
 			timeStep = tS
+			#values = []
 			if totalNumberOfDataValues >= pdt:
 				tS = tS + add
 			else:
@@ -295,7 +281,8 @@ def animation_to_netcdf(animationFile, parameterFile, outputFileName, event_emit
 				j = 0
 				ncols = numberOfColumns
 	
-		if int(prg % 2) == 0:	
+		'''
+		if int(prg % 1) == 0:	
 			progress_value = prg/length * 100
 			kwargs['event_name'] = 'animation_to_nc'
 			kwargs['event_description'] = 'creating netcdf file from output animation file'
@@ -303,6 +290,7 @@ def animation_to_netcdf(animationFile, parameterFile, outputFileName, event_emit
 			if event_emitter:
 				event_emitter.emit('progress',**kwargs)
 		prg += 1
+		'''
 
 	# Global attributes
 	ncfile.title = 'PRMS Animation File'
