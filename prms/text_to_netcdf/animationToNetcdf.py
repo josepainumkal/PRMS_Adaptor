@@ -59,11 +59,14 @@ def find_average_resolution(fileHandle, numberOfHruCells, numberOfRows, numberOf
 
 def add_metadata(outputVariableName):
 
+	flag = 0
 	projectRoot = os.path.dirname(os.path.dirname(__file__))
 	fileLocation = os.path.join(projectRoot, 'variableDetails/outputVariables.txt')
 	fileHandle = open(fileLocation, 'r')
 	for line in fileHandle:
+		
 		if outputVariableName in line:
+			flag = 1
 			outputVariableNameFromFile = line.strip()		
 			lengthOfOutputVariableName = len(outputVariableNameFromFile)
 			positionOfNameStart = outputVariableNameFromFile.index(':') + 2
@@ -79,7 +82,12 @@ def add_metadata(outputVariableName):
 			positionOfUnitStart = outputVariableUnitFromFile.index(':') + 2
 			outputVariableUnit = outputVariableUnitFromFile[positionOfUnitStart:lengthOfOutputVariableUnit]
 
-			break;
+			break
+
+	if flag == 0:
+	    	outputVariableName = outputVariableName
+	    	outputVariableDescription = 'None'
+	    	outputVariableUnit = 'None'
 
 	return outputVariableName, outputVariableDescription, outputVariableUnit
 
