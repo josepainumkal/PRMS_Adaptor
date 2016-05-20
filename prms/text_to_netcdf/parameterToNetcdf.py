@@ -344,8 +344,8 @@ def parameter_to_netcdf(parameterFile, locationFile, numberOfHruCells, numberOfR
     	fileHandle = open(fileLocation, 'r')
         values = find_space_dependent_parameter_values(fileHandle, spaceRelatedParameterNames[index], numberOfHruCells)	
 	var[:] = values
-	temp = numpy.transpose(numpy.array(var))
-	var[:] = temp
+	#temp = numpy.transpose(numpy.array(var))
+	#var[:] = temp
 
         if i % numberOfParameters == 0:	
             progress_value = prg/length * 100
@@ -377,8 +377,8 @@ def parameter_to_netcdf(parameterFile, locationFile, numberOfHruCells, numberOfR
     	    fileHandle = open(fileLocation, 'r')
             values = find_space_and_time_dependent_parameter_values(fileHandle, spaceAndTimeRelatedParameterNames[index], numberOfHruCells, monthIndex)		
 	    var[:] = values
-	    temp = numpy.transpose(numpy.array(var))
-	    var[:] = temp
+	    #temp = numpy.transpose(numpy.array(var))
+	    #var[:] = temp
 
     for index in range(len(otherParameterNames)):
         value = find_variable_type(otherParameterTypes[index])
@@ -397,8 +397,8 @@ def parameter_to_netcdf(parameterFile, locationFile, numberOfHruCells, numberOfR
         fileHandle = open(parameterFile, 'r')
         values = find_other_parameter_values(fileHandle, otherParameterNames[index], otherParameterDimensionValues[index])
         var[:] = values
-	temp = numpy.transpose(numpy.array(var))
-	var[:] = temp
+	#temp = numpy.transpose(numpy.array(var))
+	#var[:] = temp
    
     # Global attributes
     fileHandle = open(parameterFile, 'r')
