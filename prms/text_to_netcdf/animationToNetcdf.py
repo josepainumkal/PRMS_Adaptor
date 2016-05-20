@@ -5,6 +5,7 @@ import osr
 import sys
 import os
 import time
+from datetime import datetime
 from netCDF4 import Dataset
 
 def find_location_values(fileHandle, numberOfHruCells, position):
@@ -116,8 +117,14 @@ def extract_lat_and_lon_information(parameterFile):
 	return latitudeValues, longitudeValues
 
 
-def animation_to_netcdf(animationFile, parameterFile, outputFileName, event_emitter=None, **kwargs):
+def animation_to_netcdf(animationFile, parameterFile, outputFileName, limit=547000, event_emitter=None, **kwargs):
 
+	newLimit = os.environ.get('PRMS_ANIMATION_LIMIT')
+	
+	if newLimit:
+		limit = int(newLimit)
+	
+	start = datetime.now()
 	kwargs['event_name'] = 'animation_to_nc'
 	kwargs['event_description'] = 'creating netcdf file from output animation file'
 	kwargs['progress_value'] = 0.00
@@ -143,10 +150,12 @@ def animation_to_netcdf(animationFile, parameterFile, outputFileName, event_emit
 	for line in fileHandle:
 		if '#' in line:
 			numberOfMetadataLines = numberOfMetadataLines + 1
-
+		else:
+			break
+	
 	totalNumberOfDataValues = totalNumberOfLines-(numberOfMetadataLines+2)
 	numberOfTimeSteps = totalNumberOfDataValues/(numberOfRows*numberOfColumns)
-
+	
 	fileHandle = open(animationFile, 'r')
 	for i in range(numberOfMetadataLines):
 		fileHandle.next()
@@ -204,7 +213,8 @@ def animation_to_netcdf(animationFile, parameterFile, outputFileName, event_emit
 		var.layer_units = outputVariableUnit
 		var.grid_mapping = "crs" 
 
-	limit = 725000
+	#limit = 780000 (2gb)
+	#limit = 547000 (1gb)
 	
 	i = 0
 	j = 0
@@ -227,7 +237,7 @@ def animation_to_netcdf(animationFile, parameterFile, outputFileName, event_emit
 	pdt = product
 	tS = 0
 	length = len(variables)
-
+	
 	if product <= limit:
 		tS = tS + 1
 		while pdt + product <= limit and pdt + product <= totalNumberOfDataValues:
@@ -235,10 +245,11 @@ def animation_to_netcdf(animationFile, parameterFile, outputFileName, event_emit
 			tS = tS + 1
 		add = tS
 		chunkSize = pdt
-	#print chunkSize
+	
 	while totalNumberOfDataValues > 0:
 		print 'totalNumberOfDataValues: ', totalNumberOfDataValues 
 		if product <= limit:
+			
 			if totalNumberOfDataValues >= pdt:
 				chunkSize = pdt
 			else:
@@ -265,6 +276,7 @@ def animation_to_netcdf(animationFile, parameterFile, outputFileName, event_emit
 			print 'ts: ', tS
 		
 		else:
+			
 			if ncols > limit:
 				chunkSize = limit
 				ncols = ncols - limit
@@ -314,6 +326,8 @@ def animation_to_netcdf(animationFile, parameterFile, outputFileName, event_emit
 
     # Close the 'ncfile' object
 	ncfile.close()
+
+	print datetime.now()-start
 
 
 
