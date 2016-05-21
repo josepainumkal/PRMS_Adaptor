@@ -7,7 +7,7 @@ ee = EventEmitter()
 def progress(**kwargs):
     print kwargs
 
-os.environ["PRMS_ANIMATION_LIMIT"] = "40000"
+os.environ["PRMS_ANIMATION_LIMIT"] = "7500000"
 
 '''
 from prms.text_to_netcdf import dataToNetcdf
